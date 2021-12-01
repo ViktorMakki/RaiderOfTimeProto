@@ -15,22 +15,69 @@ enum class MazePathDirection : uint8
 	RIGHT = 3 UMETA(DisplayName = "RIGHT")
 };
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class MazeTileType : uint8
 {
-	PATH = 0 UMETA(DisplayName = "PATH"),
-	WALL = 1  UMETA(DisplayName = "WALL")
+	WALL = 0,
+	PATH = 1 << 0,
+	DOOR = PATH | 1 << 1,
+	ONE_WAY_DOOR =  DOOR | 1 << 2,
+	TWO_WAY_DOOR =  DOOR | 1 << 3,
+	GOAL =	PATH | 1 << 4,
+	START =	PATH | 1 << 5
+};
+ENUM_CLASS_FLAGS(MazeTileType);
+
+USTRUCT(BlueprintType)
+struct FTile
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	MazeTileType tile;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	int32 recursionLevel;
 };
 
+
+// Need to know chamber hierarchy with levels
+// Need to know Doors with levels
+// 2-way doors
+// Goal tiles
+// start tile
 USTRUCT(BlueprintType)
 struct FTileArray 
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
-	TArray<MazeTileType> tiles;
+	TArray<FTile> tiles;
 };
 
+USTRUCT(BlueprintType)
+struct FChamber
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	FIntPoint leftBottom;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	FIntPoint rightTop;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	int32 recursionLevel;
+};
+
+USTRUCT(BlueprintType)
+struct FMazeGenerationResult 
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	TArray<FTileArray> tiles;
+};
 
 USTRUCT(BlueprintType)
 struct FMazeGeneratorData 

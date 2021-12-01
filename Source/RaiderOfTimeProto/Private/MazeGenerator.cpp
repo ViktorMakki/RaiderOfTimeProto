@@ -5,14 +5,15 @@
 
 #include <vector>
 
-class Door 
+class Door
 {
 public:
 	FIntPoint location;
 
-	void Draw(TArray<FTileArray>& map) const
+	void Draw(TArray<FTileArray>& map, int32 recursionLevel) const
 	{
-		map[location.X].tiles[location.Y] = MazeTileType::PATH;
+		map[location.X].tiles[location.Y].tile = MazeTileType::PATH;
+		map[location.X].tiles[location.Y].recursionLevel = recursionLevel;
 	}
 };
 
@@ -21,75 +22,50 @@ class Wall
 public:
 	FIntPoint start, end;
 
-	void Draw(TArray<FTileArray>& map) const
+	void Draw(TArray<FTileArray>& map, int32 recursionLevel) const
 	{
-		FillWalls(map, start, end);
+		DrawWalls(map, start, end, recursionLevel);
 	}
 
 	int32 Size() const 
 	{
-		return start.X < end.X ? abs(end.X - start.X) : abs(end.Y - start.Y);
+		return start.X < end.X ? end.X - start.X : end.Y - start.Y;
 	}
 
 	FIntPoint GetRandomLocation() const
 	{		
 		if (start.X == end.X) {
-			if (start.Y < end.Y )
-				return { start.X, FMath::RandRange(start.Y, end.Y) };
-			if (end.Y < start.Y)
-				return { start.X, FMath::RandRange(end.Y, start.Y ) };
+			return { start.X, FMath::RandRange(start.Y, end.Y) };
 		}
-
 		if (start.Y == end.Y) {
-			if (start.X < end.X )
-				return {FMath::RandRange(start.X , end.X), start.Y};
-			if (end.X < start.X )
-				return {FMath::RandRange(end.X , start.X), start.Y};
+			return {FMath::RandRange(start.X , end.X), start.Y};
 		}
 		return start;
 	}
 
 private:
-	static void FillWalls(TArray<FTileArray>& map, const FIntPoint& start, const FIntPoint& end)
+	static void DrawWalls(TArray<FTileArray>& map, const FIntPoint& start, const FIntPoint& end, int32 recursionLevel)
 	{
 		if (start.X == end.X)
-			FillWallsVertical(map, start.X, start.Y, end.Y);
+			DrawWallsVertical(map, start.X, start.Y, end.Y, recursionLevel);
 		if (start.Y == end.Y)
-			FillWallsHorizontal(map, start.Y, start.X, end.X);
+			DrawWallsHorizontal(map, start.Y, start.X, end.X, recursionLevel);
 	}
 
-	static void FillWallsVertical(TArray<FTileArray>& map, int32 x, int32 yStart, int32 yEnd)
+	static void DrawWallsVertical(TArray<FTileArray>& map, int32 x, int32 yStart, int32 yEnd, int32 recursionLevel)
 	{
-		map[x].tiles[yEnd] = MazeTileType::WALL;
-
-		int32 distance = yEnd - yStart;
-
-		if (distance == 0)
-			return;
-
-		int32 iterValue = distance / abs(distance);
-
-		for (int32 y = yStart; y != yEnd; y += iterValue) {
-			map[x].tiles[y] = MazeTileType::WALL;
+		for (int32 y = yStart; y <= yEnd; y++) {
+			map[x].tiles[y].tile = MazeTileType::WALL;
+			map[x].tiles[y].recursionLevel = recursionLevel;
 		}
 	}
 
-	static void FillWallsHorizontal(TArray<FTileArray>& map, int32 y, int32 xStart, int32 xEnd)
-	{
-		map[xEnd].tiles[y] = MazeTileType::WALL;
-
-		int32 distance = xEnd - xStart;
-
-		if (distance == 0)
-			return;
-
-		int32 iterValue = distance / abs(distance);
-
-		for (int32 x = xStart; x != xEnd; x += iterValue) {
-			map[x].tiles[y] = MazeTileType::WALL;
+	static void DrawWallsHorizontal(TArray<FTileArray>& map, int32 y, int32 xStart, int32 xEnd, int32 recursionLevel)
+	{		
+		for (int32 x = xStart; x <= xEnd; x++) {
+			map[x].tiles[y].tile = MazeTileType::WALL;
+			map[x].tiles[y].recursionLevel = recursionLevel;
 		}
-
-
 	}
 };
 
@@ -97,7 +73,6 @@ class Chamber
 {
 public:
 	FIntPoint leftBottom, rightTop;
-	Door door;
 	int32 Width() const 
 	{
 		return rightTop.X - leftBottom.X;
@@ -109,37 +84,6 @@ public:
 	}
 };
 
-// leftBottom <= result >= rightTop
-static FIntPoint RandomPointInBounds(const FIntPoint& leftBottom, const FIntPoint& rightTop, int32 margin = 0)
-{
-	return { FMath::RandRange(leftBottom.X + margin, rightTop.X - margin), FMath::RandRange(leftBottom.Y + margin, rightTop.Y - margin) };
-}
-
-static bool IsPointInSkipRange(const FIntPoint& point, const std::vector<FIntPoint>& skipPoints)
-{
-	for (const auto& sp : skipPoints) 
-	{
-		if (point.X == sp.X || point.Y == sp.Y)
-			return true;
-	}
-	return false;
-}
-
-static FIntPoint RandomPointInBoundsSkipRange(const FIntPoint& leftBottom, const FIntPoint& rightTop, const std::vector<FIntPoint>& skipPoints, int32 margin = 0)
-{
-	FIntPoint result = RandomPointInBounds(leftBottom, rightTop, margin);
-	int32 probes = 0;
-	while (IsPointInSkipRange(result, skipPoints))
-	{
-		if (probes > 10)
-			return result;
-		result = RandomPointInBounds(leftBottom, rightTop, margin);
-		probes++;
-	}
-	return result;
-}
-
-
 static TArray<FTileArray> CreateBaseMap(int32 width, int32 height)
 {
 	TArray<FTileArray> result;
@@ -148,85 +92,101 @@ static TArray<FTileArray> CreateBaseMap(int32 width, int32 height)
 		for (int32 y = 0; y < height; y++) {
 			result[x].tiles.Add({});
 			if (x == 0 || x == width - 1 || y == 0 || y == height - 1) {
-				result[x].tiles[y] = MazeTileType::WALL;
+				result[x].tiles[y].tile = MazeTileType::WALL;
+				result[x].tiles[y].recursionLevel = 0;
 			}
 			else {
-				result[x].tiles[y] = MazeTileType::PATH;
+				result[x].tiles[y].tile = MazeTileType::PATH;
+				result[x].tiles[y].recursionLevel = 0;
 			}
 		}	
 	}
 	return result;
 }
 
-static std::vector<Door> CreateDoors(const Chamber& chamber, const std::vector<Wall>& walls)
+static bool IsHorizontal(const Chamber& chamber) 
 {
-	//PARAMETER may be parameterized by chambersize
-	std::vector<Door> result;
+	int32 width = chamber.Width();
+	int32 height = chamber.Height();
 
-	int32 indexToSkip = FMath::RandRange(0, walls.size() - 1);
-	for (int32 i = 0; i < walls.size(); i++) {
-		if (i == indexToSkip)
-			continue;
+	if (width > height)
+		return true;
+	if (width < height)
+		return false;
+	return FMath::RandBool();
+}
 
-		result.push_back({ walls[i].GetRandomLocation() });		
+static bool IsHorizontal(const Wall& wall) 
+{
+	if (wall.start.X != wall.end.X)
+		return true;
+	return false;
+}
+
+//returns the wall that splitted the chamber
+static Wall CreateVerticalSplitWall(const Chamber& chamber) 
+{	
+	int32 randomStart = chamber.Width() > 7 ? 3 : 1;
+	//Walls can be on every second place to avoid blocking doors
+	int32 splitX = FMath::RandRange(randomStart, (chamber.Width() - randomStart)/2);
+	int32 x = chamber.leftBottom.X + (2 * splitX);
+	return { { x, chamber.leftBottom.Y}, {x, chamber.rightTop.Y} };
+}
+
+//returns the wall that splitted the chamber
+static Wall CreateHorizontalSplitWall(const Chamber& chamber)
+{
+	int32 randomStart = chamber.Width() > 7 ? 3 : 1;
+	//Walls can be on every second place to avoid blocking doors
+	int32 splitY = FMath::RandRange(randomStart, (chamber.Height() - randomStart) / 2);
+	int32 y = chamber.leftBottom.Y + (2 * splitY);
+	return { { chamber.leftBottom.X, y}, {chamber.rightTop.X, y} };
+}
+
+static Door CreateDoorOnWall(const Wall& wall) 
+{
+	int32 min = wall.Size() > 4 ? 1 : 0;
+	int32 max = (wall.Size() - 1) / 2;
+	int32 rand = FMath::RandRange(min, max) * 2;
+
+	if (IsHorizontal(wall)) {
+		int32 doorX = rand + 1 + wall.start.X;
+		return { {doorX, wall.start.Y} };
 	}
-
-	return result;
+	int32 doorY = rand + 1 + wall.start.Y;
+	return { {wall.start.X, doorY} };
 }
 
-static std::vector<Wall> CreateSplitWalls(const Chamber& chamber, const FIntPoint& splitPoint)
+static void SplitChamber(TArray<FTileArray>& map, const Chamber& chamber, int32 recursionLevel) 
 {
-	std::vector<Wall> result{ 4 };
-	result[0] = { {splitPoint.X - 1, splitPoint.Y}, { chamber.leftBottom.X + 1, splitPoint.Y }};
-	result[1] = { {splitPoint.X, splitPoint.Y + 1}, {splitPoint.X, chamber.rightTop.Y - 1} };
-	result[2] = { {splitPoint.X + 1, splitPoint.Y}, {chamber.rightTop.X - 1, splitPoint.Y} };
-	result[3] = { {splitPoint.X, splitPoint.Y - 1}, {splitPoint.X, chamber.leftBottom.Y + 1} };
-	return result;
-}
-
-static std::vector<Chamber> CreateNewChambersBySplitPoint(const Chamber& chamber, const FIntPoint& splitPoint)
-{
-	std::vector<Chamber> newChambers{ 4 };
-	newChambers[0] = { chamber.leftBottom, splitPoint };
-	newChambers[1] = { {chamber.leftBottom.X, splitPoint.Y}, {splitPoint.X, chamber.rightTop.Y} };
-	newChambers[2] = { splitPoint, chamber.rightTop };
-	newChambers[3] = { {splitPoint.X, chamber.leftBottom.Y}, {chamber.rightTop.X, splitPoint.Y} };
-	return newChambers;
-}
-
-static std::vector<FIntPoint> Cast(const std::vector<Door>& doors) 
-{
-	std::vector<FIntPoint> result;
-	for (const auto& door : doors) {
-		result.push_back(door.location);
-	}
-	return result;
-}
-
-static void SplitChambers(TArray<FTileArray>& map, const Chamber& chamber, const std::vector<FIntPoint>& lastDoors) 
-{
-	//PARAMETER
-	if (chamber.Width() <= 2 || chamber.Height() <= 2)
+	if (chamber.Width() < 3 && chamber.Height() < 3)
 		return;
 
-	const FIntPoint splitPoint = RandomPointInBoundsSkipRange(chamber.leftBottom, chamber.rightTop, lastDoors, 2);
-	const std::vector<Chamber> newChambers = CreateNewChambersBySplitPoint(chamber, splitPoint);
-	const std::vector<Wall> walls = CreateSplitWalls(chamber, splitPoint);
-	const std::vector<Door> doors = CreateDoors(chamber, walls);
+	recursionLevel++;
 
-	map[splitPoint.X].tiles[splitPoint.Y] = MazeTileType::WALL;
+	Wall splitWall;
+	bool isHorizontal = IsHorizontal(chamber);
 
-	for (const Wall& wall : walls) {		
-		wall.Draw(map);
+	if (isHorizontal) {
+		splitWall = CreateVerticalSplitWall(chamber);
 	}
-
-	for (const Chamber& c : newChambers) {
-		SplitChambers(map, c, Cast(doors));
+	else {
+		splitWall = CreateHorizontalSplitWall(chamber);
 	}
+	splitWall.Draw(map, recursionLevel);
 
-	for (const Door& door : doors) {
-		door.Draw(map);
-	}
+
+	const Door door = CreateDoorOnWall(splitWall);
+
+	door.Draw(map, recursionLevel);
+
+	Chamber splitChamber1, splitChamber2;
+
+	splitChamber1 = { chamber.leftBottom, splitWall.end };
+	splitChamber2 = { splitWall.start, chamber.rightTop };
+
+	SplitChamber(map, splitChamber1, recursionLevel);
+	SplitChamber(map, splitChamber2, recursionLevel);
 }
 
 TArray<FTileArray> UMazeGenerator::GenerateMaze(const FMazeGeneratorData& data)
@@ -236,6 +196,6 @@ TArray<FTileArray> UMazeGenerator::GenerateMaze(const FMazeGeneratorData& data)
 	Chamber firstChamber;
 	firstChamber.leftBottom = { 0, 0 };
 	firstChamber.rightTop = { data.width - 1, data.height - 1 };
-	SplitChambers(result, firstChamber, {});
+	SplitChamber(result, firstChamber, 0);
 	return result;
 }
