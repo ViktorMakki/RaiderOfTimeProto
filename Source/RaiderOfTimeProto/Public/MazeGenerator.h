@@ -77,6 +77,9 @@ struct FMazeGenerationResult
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
 	TArray<FTileArray> tiles;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	TArray<FChamber> chambers;
 };
 
 USTRUCT(BlueprintType)
@@ -98,5 +101,5 @@ class RAIDEROFTIMEPROTO_API UMazeGenerator : public UBlueprintFunctionLibrary
 	
 public:
 	UFUNCTION(BlueprintCallable, category = "MazeGenerator")
-	static TArray<FTileArray> GenerateMaze(const FMazeGeneratorData& data);
+	static FMazeGenerationResult GenerateMaze(const FMazeGeneratorData& data);
 };

@@ -157,12 +157,19 @@ static Door CreateDoorOnWall(const Wall& wall)
 	return { {wall.start.X, doorY} };
 }
 
-static void SplitChamber(TArray<FTileArray>& map, const Chamber& chamber, int32 recursionLevel) 
+FChamber Cast(const Chamber& chamber, int32 recursionLevel) 
+{
+	return { chamber.leftBottom, chamber.rightTop, recursionLevel };
+}
+
+static void SplitChamber(FMazeGenerationResult& result, const Chamber& chamber, int32 recursionLevel)
 {
 	if (chamber.Width() < 3 && chamber.Height() < 3)
 		return;
 
 	recursionLevel++;
+
+	result.chambers.Add(Cast(chamber, recursionLevel));
 
 	Wall splitWall;
 	bool isHorizontal = IsHorizontal(chamber);
@@ -173,29 +180,34 @@ static void SplitChamber(TArray<FTileArray>& map, const Chamber& chamber, int32 
 	else {
 		splitWall = CreateHorizontalSplitWall(chamber);
 	}
-	splitWall.Draw(map, recursionLevel);
+	splitWall.Draw(result.tiles, recursionLevel);
 
 
 	const Door door = CreateDoorOnWall(splitWall);
 
-	door.Draw(map, recursionLevel);
+	door.Draw(result.tiles, recursionLevel);
 
 	Chamber splitChamber1, splitChamber2;
 
 	splitChamber1 = { chamber.leftBottom, splitWall.end };
 	splitChamber2 = { splitWall.start, chamber.rightTop };
 
-	SplitChamber(map, splitChamber1, recursionLevel);
-	SplitChamber(map, splitChamber2, recursionLevel);
+	SplitChamber(result, splitChamber1, recursionLevel);
+	SplitChamber(result, splitChamber2, recursionLevel);
 }
 
-TArray<FTileArray> UMazeGenerator::GenerateMaze(const FMazeGeneratorData& data)
+FMazeGenerationResult UMazeGenerator::GenerateMaze(const FMazeGeneratorData& data)
 {
-	TArray<FTileArray> result = CreateBaseMap(data.width, data.height);
+	// Only can work with odd numbers
+	int32 width = data.width % 2 == 0 ? data.width + 1 : data.width;
+	int32 height = data.height % 2 == 0 ? data.height + 1 : data.height;
+
+	FMazeGenerationResult result;
+	result.tiles = CreateBaseMap(width, height);
 
 	Chamber firstChamber;
 	firstChamber.leftBottom = { 0, 0 };
-	firstChamber.rightTop = { data.width - 1, data.height - 1 };
+	firstChamber.rightTop = { width - 1, height - 1 };
 	SplitChamber(result, firstChamber, 0);
 	return result;
 }
