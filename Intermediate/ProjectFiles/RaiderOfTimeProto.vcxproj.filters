@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\RaiderOfTimeProto.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{4C071CFA-0554-4DD9-A349-0A595FD79843}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\RaiderOfTimeProto.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\RaiderOfTimeProtoEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <Filter Include="Config">
+      <UniqueIdentifier>{6FAD887E-5A08-4F49-BA44-8E06198A886F}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEditorPerProjectUserSettings.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\RaiderOfTimeProto">
+      <UniqueIdentifier>{1F38866C-DAB0-46F3-B49F-DBCFC2FE7BB9}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\RaiderOfTimeProto\RaiderOfTimeProto.Build.cs">
+      <Filter>Source\RaiderOfTimeProto</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\RaiderOfTimeProto\RaiderOfTimeProto.cpp">
+      <Filter>Source\RaiderOfTimeProto</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\RaiderOfTimeProto\RaiderOfTimeProto.h">
+      <Filter>Source\RaiderOfTimeProto</Filter>
+    </ClInclude>
+    <Filter Include="Source\RaiderOfTimeProto\Private">
+      <UniqueIdentifier>{52A45BD2-EC3B-47C6-B2C4-BB866D963C20}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\RaiderOfTimeProto\Private\MazeGenerator.cpp">
+      <Filter>Source\RaiderOfTimeProto\Private</Filter>
+    </ClCompile>
+    <Filter Include="Source\RaiderOfTimeProto\Public">
+      <UniqueIdentifier>{71D630A5-31AB-482B-9CD9-03E0E721F4AE}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="..\..\Source\RaiderOfTimeProto\Public\MazeGenerator.h">
+      <Filter>Source\RaiderOfTimeProto\Public</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
