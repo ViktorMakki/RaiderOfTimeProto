@@ -21,10 +21,8 @@ enum class MazeTileType : uint8
 	WALL = 0,
 	PATH = 1 << 0,
 	DOOR = PATH | 1 << 1,
-	ONE_WAY_DOOR =  DOOR | 1 << 2,
-	TWO_WAY_DOOR =  DOOR | 1 << 3,
-	GOAL =	PATH | 1 << 4,
-	START =	PATH | 1 << 5
+	GOAL =	PATH | 1 << 2,
+	START =	PATH | 1 << 3
 };
 ENUM_CLASS_FLAGS(MazeTileType);
 
@@ -40,12 +38,6 @@ struct FTile
 	int32 recursionLevel;
 };
 
-
-// Need to know chamber hierarchy with levels
-// Need to know Doors with levels
-// 2-way doors
-// Goal tiles
-// start tile
 USTRUCT(BlueprintType)
 struct FTileArray 
 {
@@ -71,6 +63,39 @@ struct FChamber
 };
 
 USTRUCT(BlueprintType)
+struct FDoor
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	FIntPoint location;
+
+	/** Whether the path orientation through is horizontal */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	bool isHorizontal;
+
+	/** Which chamber is splitted by this */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	FChamber chamber;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	int32 recursionLevel;
+};
+
+/** Doors that are on the same wall, splitting the same chamber*/
+USTRUCT(BlueprintType)
+struct FSimblingDoors 
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	FDoor door1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	FDoor door2;
+};
+
+USTRUCT(BlueprintType)
 struct FMazeGenerationResult 
 {
 	GENERATED_BODY()
@@ -80,18 +105,40 @@ struct FMazeGenerationResult
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
 	TArray<FChamber> chambers;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	TArray<FDoor> doors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	TArray<FSimblingDoors> siblingDoors;
+
 };
 
 USTRUCT(BlueprintType)
-struct FMazeGeneratorData 
+struct FMazeGeneratorConstructData 
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
-	int32 width = 21;
+	int32 mazeWidth = 21;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
-	int32 height = 21;
+	int32 mazeHeight = 21;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	int32 goalWidth = 3;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	int32 goalHeight = 3;
+
+	/**From what chamber size is enabled to make circle*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	int32 CircleSizeStart = 0;
+
+	/**From what chamber size is enabled to make circle*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MazeGenerator")
+	int32 CircleSizeEnd = 0;
+
 };
 
 UCLASS(Blueprintable)
@@ -101,5 +148,8 @@ class RAIDEROFTIMEPROTO_API UMazeGenerator : public UBlueprintFunctionLibrary
 	
 public:
 	UFUNCTION(BlueprintCallable, category = "MazeGenerator")
-	static FMazeGenerationResult GenerateMaze(const FMazeGeneratorData& data);
+	static FMazeGenerationResult GenerateMaze(const FMazeGeneratorConstructData& data);
+
+	UFUNCTION(BlueprintCallable, category = "MazeTileMask")
+		static bool IsTypeOf(MazeTileType child, MazeTileType parent);
 };
