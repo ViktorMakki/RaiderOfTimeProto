@@ -208,7 +208,7 @@ static void CreateDoors(FMazeGenerationResult& result,
 						const Wall& splitWall,
 						const SplitChamberParameters& param)
 {
-	const bool isHorizontal = IsHorizontal(param.chamber);
+	const bool isHorizontal = IsHorizontal(splitWall);
 	const Door door = CreateDoorOnWall(splitWall);
 	const FDoor fDoor = door.Cast(param.chamber, isHorizontal, param.recursionLevel);
 	door.Draw(result.tiles, param.recursionLevel);
@@ -294,7 +294,7 @@ static Chamber CreateGoalChamber(TArray<FTileArray>& tiles, const Chamber& baseC
 
 	for (int x = 0; x < gWidth; x++) {
 		for (int y = 0; y < gHeight; y++) {
-			tiles[x].tiles[y].tile = MazeTileType::GOAL;
+			tiles[x + goalStart.X].tiles[y + goalStart.Y].tile = MazeTileType::GOAL;
 		}
 	}
 	return { {goalStart.X - 1, goalStart.Y - 1}, {goalStart.X + gWidth, goalStart.Y + gHeight} };
@@ -372,9 +372,9 @@ static std::vector<Door> CreateStartDoorsUnclockwise(const std::vector<Chamber>&
 	return result;
 }
 
-static std::vector<Door> CreateStartDoors(const std::vector<Chamber>& startChambers, Direction startDirection) 
+static std::vector<Door> CreateStartDoors(const std::vector<Chamber>& startChambers, Direction startDirection, bool isClockwise)
 {
-	return FMath::RandBool() ? CreateStartDoorsClockwise(startChambers, startDirection) :
+	return isClockwise ? CreateStartDoorsClockwise(startChambers, startDirection) :
 							   CreateStartDoorsUnclockwise(startChambers, startDirection);
 }
 
@@ -396,10 +396,13 @@ FMazeGenerationResult UMazeGenerator::GenerateMaze(const FMazeGeneratorConstruct
 	Chamber goalChamber = CreateGoalChamber(result.tiles, firstChamber, data.goalWidth, data.goalHeight);
 
 	std::vector<Chamber> startChambers = CreateStartChambers(firstChamber, goalChamber);
-	int8 startDir = RandomStartSpace(startChambers);
-	FIntPoint startSpace = RandomPathInChamber(startChambers[startDir]);
+	int8 startSpaceDirection = RandomStartSpace(startChambers);
+	FIntPoint startSpace = RandomPathInChamber(startChambers[startSpaceDirection]);
 	result.tiles[startSpace.X].tiles[startSpace.Y].tile = MazeTileType::START;
-	std::vector<Door> startDoors = CreateStartDoors(startChambers, static_cast<Direction>(startDir /2));
+
+	bool isClockwiseGenerated = FMath::RandBool();
+	const Direction startDirection = isClockwiseGenerated ? static_cast<Direction>(((startSpaceDirection / 2) + 1) % 4) : static_cast<Direction>((startSpaceDirection / 2));
+	std::vector<Door> startDoors = CreateStartDoors(startChambers, startDirection, isClockwiseGenerated);
 	
 	for (const auto& c : startChambers) {
 		for (const auto& wall : c.GetWalls()) {
@@ -411,11 +414,22 @@ FMazeGenerationResult UMazeGenerator::GenerateMaze(const FMazeGeneratorConstruct
 			{ c, 1, data.CircleSizeStart, data.CircleSizeEnd });
 	}
 
-	for (const auto door : startDoors) {
-		if (door.location == FIntPoint{0,0})
+	Direction direction = startDirection;
+	bool isHorizontal = direction % 2 == 0;
+
+	//frist door to goal
+	result.doors.Add(startDoors[0].Cast(firstChamber, isHorizontal, 1));
+	startDoors[0].Draw(result.tiles, 0);
+	isHorizontal = !isHorizontal;
+	
+	for (int8 i = 1; i < startDoors.size(); i++) {
+		if (startDoors[i].location == FIntPoint{ 0,0 })
 			continue;
-		result.doors.Add(door.Cast(firstChamber, true, 1));
-		door.Draw(result.tiles, 1);
+		result.doors.Add(startDoors[i].Cast(firstChamber, isHorizontal, 1));
+		startDoors[i].Draw(result.tiles, 0);
+		if (i % 2 != 0) {
+			isHorizontal = !isHorizontal;
+		}
 	}
 
 	return result;
