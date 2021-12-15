@@ -5,26 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "MazeGenerator.h"
+#include "MazeTypes.h"
 
 #include "BP_Maze.generated.h"
-
-USTRUCT(BlueprintType)
-struct FActorArray 
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-	TArray<AActor*>	actors;
-};
-
-USTRUCT(BlueprintType)
-struct FActor2DArray
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-	TArray<FActorArray>	actors;
-};
 
 UCLASS()
 class RAIDEROFTIMEPROTO_API ABP_Maze : public AActor
@@ -36,9 +19,6 @@ public:
 	ABP_Maze();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 	TArray<FActor2DArray> actors = {};
 	FMazeGenerationResult mazeData;
 	FIntPoint start;

@@ -2,8 +2,8 @@
 
 
 #include "BP_Maze.h"
-#include "..\Public\BP_Maze.h"
-#include "MazeWalker.h"
+#include "MazeTypes.h"
+#include "MazePath.h"
 
 // Sets default values
 ABP_Maze::ABP_Maze()
@@ -11,13 +11,6 @@ ABP_Maze::ABP_Maze()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-}
-
-// Called when the game starts or when spawned
-void ABP_Maze::BeginPlay()
-{
-	Super::BeginPlay();
-	
 }
 
 void ABP_Maze::GenerateMaze()
@@ -43,7 +36,6 @@ void ABP_Maze::GenerateMaze()
 			}
 		}
 	}
-	start = UMazeWalker::GetFarestLocation(mazeData.tiles, end);
 }
 
 TArray<AActor*>& ABP_Maze::GetActorsAt(const FIntPoint& location)
@@ -51,30 +43,28 @@ TArray<AActor*>& ABP_Maze::GetActorsAt(const FIntPoint& location)
 	return actors[location.X].actors[location.Y].actors;
 }
 
-FRotator GetRotation(MazePathDirection direction)
+FRotator GetRotation(Direction4 direction)
 {
 	switch (direction) {
-	case MazePathDirection::DOWN: 
-		return {0,-90,0};
-	case MazePathDirection::LEFT:
-          return {0, 180, 0};
-	case MazePathDirection::UP: 
-          return {0, 90, 0};
-	case MazePathDirection::RIGHT:
+	case Direction4::DOWN: 
+		return {0,90,0};
+	case Direction4::LEFT:
           return {0, 0, 0};
+	case Direction4::UP: 
+          return {0, -90, 0};
+	case Direction4::RIGHT:
+          return {0, 180, 0};
 	default: return {} ;
 	}
 }
 
 void ABP_Maze::DebugGoalPath()
 {
-  auto path = UMazeWalker::GetPathToGoal({start, end, mazeData.tiles});
-	for (const auto& segment : path.path) {
-		const auto rotation = segment.directions.IsEmpty() ? 
-			FRotator{} :
-			GetRotation(segment.directions[0]);
+  const MazePath mazePath{mazeData.tiles, end};
+  auto path = mazePath.GetPathToGoal();
+	for (const auto& segment : path) {
+		const auto rotation = GetRotation(segment.directionToGoal);
 		const FVector location{segment.location.X * tileSize,segment.location.Y * tileSize, 0};
 		GetWorld()->SpawnActor(debugClass, &location, &rotation);
 	}
 }
-

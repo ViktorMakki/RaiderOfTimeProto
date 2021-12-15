@@ -2,100 +2,123 @@
 
 #pragma once
 
-#include <vector>
-#include <unordered_map>
 #include <functional>
+#include <Tree.h>
 
-namespace PathSearching {
-
-template<class PointType, class EdgeType>
-struct Point
-{
-	PointType data;
-	std::vector<EdgeType> edges;
-};
-
-template <class PointType, class EdgeType>
+namespace Graph {
+template <class DataType>
 struct PathPoint {
-  Point<PointType, EdgeType> point;
-  int32 distance;
+  DataType data;
+  bool isToGoal = false;
 };
 
-
-template<class PointType, class EdgeType>
+template<class DataType, class EdgeType>
 struct PathSearchResult 
 {
 	//path starts with goal and ends with the start point
 	//Contains points with 1 edge
-  std::vector<PathPoint<PointType, EdgeType>> pathToGoal;
-  std::vector<PathPoint<PointType, EdgeType>> walkedPoints;
+  Tree<PathPoint<DataType>, EdgeType> pathTree;
 };
 
-template<class PointType, class EdgeType>
+template<class DataType, class EdgeType>
 struct PathSearcherInput 
 {
 	// starting point with available edges
-	Point<PointType, EdgeType> startPoint;
+  TPair<DataType, TArray<EdgeType>> startPoint;
 
 	//How deep should the algorithm search;
 	int16 maxDepth = 0;
 
-	// needs to return the next point from the given point on the given edge, with all available edges
-	std::function<Point<PointType, EdgeType>(const PointType& fromPoint, const EdgeType& onEdge)> GetNextPointCallback;
+	// needs to return the next point from the given point on the given edge
+	std::function<DataType(const DataType& fromPoint, const EdgeType& onEdge)> GetNextPointCallback;
+
+	// needs to return all available edges from the given point
+	std::function<TArray<EdgeType>(const DataType& fromPoint)>GetAvailableEdgesCallback;
 
 	// needs to return true if the given point is the goal;
-	std::function<bool (const PointType& point)> IsGoalCallback;
+	std::function<bool(const DataType& point)> IsGoalCallback =
+		[](const DataType&) { return false; };
 };
 
 class PathSearcher
 {
 public:
-	template<class PointType, class EdgeType>
-	static PathSearchResult<PointType, EdgeType> DFS(const PathSearcherInput<PointType, EdgeType>& inputData);
+	template<class DataType, class EdgeType>
+ static TSharedPtr<Tree<PathPoint<DataType>, EdgeType>> DFS(
+     const PathSearcherInput<DataType, EdgeType>& inputData);
+
 private:
 	//returns true if reached goal
-	template<class PointType, class EdgeType>
-	static bool DFSStep(PathSearchResult<PointType, EdgeType>& result, const PathSearcherInput<PointType, EdgeType>& inputData, const Point<PointType, EdgeType>& currentPoint, int16 depth);
+ template <class DataType, class EdgeType>
+ static bool DFSStep(Tree<PathPoint<DataType>, EdgeType>& tree,
+								     TSharedPtr<TreePoint<PathPoint<DataType>, EdgeType>> currentPoint,
+                     const PathSearcherInput<DataType, EdgeType>& inputData,
+                     int16 depth);
 };
 
 #pragma region Implementation
 
 //returns true if reached goal
-template<class PointType, class EdgeType>
-inline bool PathSearcher::DFSStep(PathSearchResult<PointType, EdgeType>& result, const PathSearcherInput<PointType, EdgeType>& inputData, const Point<PointType, EdgeType>& currentPoint, int16 depth)
-{	
-	if (std::find_if(result.walkedPoints.begin(), result.walkedPoints.end(),
-		[&currentPoint](const PathPoint<PointType, EdgeType>& point) { return point.point.data == currentPoint.data; }) != result.walkedPoints.end()) {
+template <class DataType, class EdgeType>
+bool PathSearcher::DFSStep(
+			Tree<PathPoint<DataType>, EdgeType>& tree,
+			TSharedPtr<TreePoint<PathPoint<DataType>, EdgeType>> currentPoint,
+			const PathSearcherInput<DataType, EdgeType>& inputData,
+			int16 depth)
+{
+
+	bool isGoalFound = false;
+
+	if (inputData.IsGoalCallback(currentPoint->data.data)) {
+    currentPoint->data.isToGoal = true;
+		isGoalFound = true;
+	}
+
+	if (inputData.maxDepth > 0 && depth++ > inputData.maxDepth) {
 		return false;
 	}
 
-	if (inputData.maxDepth > 0 && depth > inputData.maxDepth)
-		return false;
+	const auto edges = inputData.GetAvailableEdgesCallback(currentPoint->data.data);
+	for (const auto edge : edges) {
+		TSharedPtr<TreePoint<PathPoint<DataType>, EdgeType>> newPoint =
+			TSharedPtr<TreePoint<PathPoint<DataType>, EdgeType>>{
+				new TreePoint<PathPoint<DataType>, EdgeType>()};
 
-	depth++;
-        result.walkedPoints.push_back({currentPoint, depth});
-
-	if (inputData.IsGoalCallback(currentPoint.data)) {
-		result.pathToGoal.push_back({{currentPoint.data, {}}, depth});
-		return true;
-	}
-
-	//OPTIMIZATION: dont check the edge it came from
-	for (const auto& edge : currentPoint.edges) {
-		const auto nextPoint = inputData.GetNextPointCallback(currentPoint.data, edge);
-		if (DFSStep(result, inputData, nextPoint, depth)) {
-                  result.pathToGoal.push_back({{currentPoint.data, {edge}}, depth});
-			return true;
+		newPoint->data.data = inputData.GetNextPointCallback(currentPoint->data.data, edge);
+		if (tree.Contains(newPoint->data,[](const PathPoint<DataType>& data1,
+                         const PathPoint<DataType>& data2) {
+														return data1.data == data2.data;})) {
+			continue;
+		}
+		
+		newPoint->parent = currentPoint;
+		currentPoint->children[edge] = newPoint;
+		if (DFSStep(tree, newPoint, inputData, depth)) {
+			currentPoint->data.isToGoal = true;
+			isGoalFound = true;
 		}
 	}
-	return false;
+
+	return isGoalFound;
 }
 
-template<class PointType, class EdgeType>
-inline PathSearchResult<PointType, EdgeType> PathSearcher::DFS(const PathSearcherInput<PointType, EdgeType>& inputData)
+template <class DataType, class EdgeType>
+TSharedPtr<Tree<PathPoint<DataType>, EdgeType>> PathSearcher::DFS(
+    const PathSearcherInput<DataType, EdgeType>& inputData)
 {
-	PathSearchResult<PointType, EdgeType> result;
-	DFSStep(result, inputData, inputData.startPoint, 0);
+	using TreePathPointPtr = TSharedPtr<Tree<PathPoint<DataType>, EdgeType>>;
+  TreePathPointPtr result{new Tree<PathPoint<DataType>, EdgeType>()};
+
+  auto root = result->GetRoot(); 
+  root->data = {inputData.startPoint.Key};
+  for(const auto& edge : inputData.startPoint.Value) {
+    auto newPoint = TSharedPtr<TreePoint<PathPoint<DataType>, EdgeType>>{
+        new TreePoint<PathPoint<DataType>, EdgeType>};
+    newPoint->parent = root;
+    newPoint->data.data = {inputData.GetNextPointCallback(root->data.data, edge)};
+    root->children[edge] = newPoint;
+    if (DFSStep(*result, newPoint, inputData, 1)) break;
+  }
 	return result;
 }
 
