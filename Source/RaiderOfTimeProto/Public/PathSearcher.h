@@ -15,7 +15,7 @@ struct PathPoint {
 template<class DataType, class EdgeType>
 struct PathSearchResult 
 {
-	//path starts with goal and ends with the start point
+	//path_ starts with goal and ends with the start_ point
 	//Contains points with 1 edge
   Tree<PathPoint<DataType>, EdgeType> pathTree;
 };

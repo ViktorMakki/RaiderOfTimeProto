@@ -5,6 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "BP_Maze.h"
+#include "MazePath.h"
+#include "BP_Obsticle.h"
+
 #include "BP_Puzzle.generated.h"
 
 USTRUCT(BlueprintType)
@@ -42,10 +45,15 @@ class RAIDEROFTIMEPROTO_API ABP_Puzzle : public AActor
 public:	
 	// Sets default values for this actor's properties
 	ABP_Puzzle();
-
+  
 	UFUNCTION(BlueprintCallable)
-	virtual bool Construct(const FPuzzleConstructionData& inputData);
+	bool Construct(const FPuzzleConstructionData& inputData);
 
 protected:
 
+  UFUNCTION(BlueprintCallable)
+	virtual bool ConstructPuzzle(const UMazePath* mazePath, ABP_Maze* maze);
+
+	UFUNCTION(BlueprintCallable)
+	static Direction4 SwapDirection(Direction4 direction);
 };

@@ -23,8 +23,9 @@ protected:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UClass* mazeType;
 
+	// for each puzzle what is the max distance
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  int32 puzzleCount{4};
+  TArray<int32> puzzleDistanceMap;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<UClass*> availablePuzzles;

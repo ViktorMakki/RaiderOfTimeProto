@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Kismet/BlueprintFunctionLibrary.h"
 #include "MazeTypes.generated.h"
 
 UENUM(BlueprintType,
@@ -65,7 +64,7 @@ struct FDoor {
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
   FIntPoint location;
 
-  /** Whether the path orientation through is horizontal */
+  /** Whether the path_ orientation through is horizontal */
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
   bool isHorizontal;
 
@@ -117,6 +116,5 @@ struct FPathSegment {
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
   TArray<Direction4> directionsAvailable;
-
 };
 

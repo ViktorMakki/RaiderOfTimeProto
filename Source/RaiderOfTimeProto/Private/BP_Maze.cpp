@@ -13,8 +13,9 @@ ABP_Maze::ABP_Maze()
 
 }
 
-void ABP_Maze::GenerateMaze()
-{
+const TArray<FTileArray>& ABP_Maze::GetTiles() const { return mazeData.tiles; }
+
+ABP_Maze* ABP_Maze::GenerateMaze() {
 	mazeData = UMazeGenerator::GenerateMaze(mazeConstructionData);
 	actors.SetNum(mazeConstructionData.mazeWidth);
 	for(auto& item : actors) {
@@ -36,6 +37,7 @@ void ABP_Maze::GenerateMaze()
 			}
 		}
 	}
+	return this;
 }
 
 TArray<AActor*>& ABP_Maze::GetActorsAt(const FIntPoint& location)
@@ -58,9 +60,18 @@ FRotator GetRotation(Direction4 direction)
 	}
 }
 
+AActor* ABP_Maze::SpawnActorAt(UClass* type, const FIntPoint& location, Direction4 direction) {
+  const auto rotation = GetRotation(direction);
+  const FVector position{location.X * tileSize,
+                         location.Y * tileSize, 0};
+  const auto newActor = GetWorld()->SpawnActor(type, &position, &rotation);
+  GetActorsAt(location).Add(newActor);
+  return newActor;
+}
+
 void ABP_Maze::DebugGoalPath()
 {
-  const MazePath mazePath{mazeData.tiles, end};
+  const UMazePath mazePath{mazeData.tiles, end};
   auto path = mazePath.GetPathToGoal();
 	for (const auto& segment : path) {
 		const auto rotation = GetRotation(segment.directionToGoal);

@@ -21,9 +21,10 @@ public:
 protected:
 	TArray<FActor2DArray> actors = {};
 	FMazeGenerationResult mazeData;
-	FIntPoint start;
-	FIntPoint end;
 public:
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
+  FIntPoint end;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
 	UClass* pathClass;
 
@@ -40,10 +41,16 @@ public:
 	FMazeGeneratorConstructData mazeConstructionData;
 
 	UFUNCTION(BlueprintCallable, category = "Maze")
-	void GenerateMaze();
+	const TArray<FTileArray>& GetTiles() const;
+
+	UFUNCTION(BlueprintCallable, category = "Maze")
+	ABP_Maze* GenerateMaze();
 
 	UFUNCTION(BlueprintCallable, category = "Maze")
 	TArray<AActor*>& GetActorsAt(const FIntPoint& location);
+
+	UFUNCTION(BlueprintCallable, category = "Maze")
+	AActor* SpawnActorAt(UClass* type,const FIntPoint& location, Direction4 direction);
 
 	UFUNCTION(BlueprintCallable, category = "Maze")
 	void DebugGoalPath();

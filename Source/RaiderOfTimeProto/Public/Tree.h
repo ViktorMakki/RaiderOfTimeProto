@@ -74,6 +74,12 @@ public:
 
 	void ForEachToRoot(const ForEachCallbackConst& forEachCallback,
                      const TreePoint<DataType, EdgeType>& point) const;
+  
+	TSharedPtr<TreePoint<DataType, EdgeType>> Find(const DataType& data,
+								const IsEqualCallback& isEqualCallback =
+	                [](const DataType& data1, const DataType& data2) {
+	                  return data1 == data2;
+	                });
 
 	bool Contains(const DataType& data, 
 								const IsEqualCallback& isEqualCallback =
@@ -133,7 +139,7 @@ TSharedPtr<TreePoint<DataType, EdgeType>> point) {
 template <class DataType, class EdgeType>
 void Tree<DataType, EdgeType>::ForEach(const ForEachCallback& forEachCallback)
 {
-  ForEachStep(forEachCallback, root);
+  ForEachStep(forEachCallback, *root);
 }
 
 template <class DataType, class EdgeType>
@@ -183,6 +189,20 @@ void Tree<DataType, EdgeType>::ForEachToRoot(const ForEachCallbackConst& forEach
 	const TreePoint<DataType, EdgeType>& point) const
 {
   ForEachToRootStepConst(forEachCallback, *root, point);
+}
+
+template <class DataType, class EdgeType>
+TSharedPtr<TreePoint<DataType, EdgeType>> Tree<DataType, EdgeType>::Find(const DataType& data, const IsEqualCallback& isEqualCallback)
+{
+  TSharedPtr<TreePoint<DataType, EdgeType>> result;
+  ForEach([&data, &result, &isEqualCallback](const TreePoint<DataType, EdgeType>& data2) {
+    if (isEqualCallback(data, data2.data)) {
+      result = data2;
+      return true;
+    }
+    return false;
+  });
+  return result;
 }
 
 template <class DataType, class EdgeType>

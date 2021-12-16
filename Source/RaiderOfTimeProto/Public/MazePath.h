@@ -6,16 +6,40 @@
 #include "PathSearcher.h"
 #include "MazeTypes.h"
 
+#include "MazePath.generated.h"
+
 /**
  * 
  */
-class RAIDEROFTIMEPROTO_API MazePath
+UCLASS()
+class RAIDEROFTIMEPROTO_API UMazePath : public UObject
 {
-public:
-  MazePath(const TArray<FTileArray>& maze, const FIntPoint& goal);
 
+  GENERATED_BODY()
+public:
+  UMazePath();
+  UMazePath(const TArray<FTileArray>& maze, const FIntPoint& goal);
+  UMazePath(const TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path);
+
+  UFUNCTION(BlueprintCallable)
   TArray<FPathSegment> GetPathToGoal() const;
+
+  UFUNCTION(BlueprintCallable)
+  FPathSegment GetRoot() const;
+
+	UFUNCTION(BlueprintCallable)
+  FPathSegment GetFarestLeaf() const;
+
+
+  void SetPath(TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path);
+
+  static TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>>
+	GetSegmentsInDistance(const TArray<FTileArray>& maze,
+												const FIntPoint& start,
+												Direction4 startDirection,
+												int32 distance);
+
  private:
-	TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path;
-  TSharedPtr<Graph::TreePoint<Graph::PathPoint<FIntPoint>, Direction4>> start;
+	TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path_;
+  TSharedPtr<Graph::TreePoint<Graph::PathPoint<FIntPoint>, Direction4>> start_;
 };
