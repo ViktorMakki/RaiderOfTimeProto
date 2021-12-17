@@ -86,6 +86,8 @@ public:
 									[](const DataType& data1, const DataType& data2) {
 									return data1 == data2;}) const;
 
+	TArray<TSharedPtr<TreePoint<DataType, EdgeType>>> GetLeafs();
+
 	TSharedPtr<TreePoint<DataType, EdgeType>> GetRoot();
 
   TSharedPtr<TreePoint<DataType, EdgeType>> GetDeepestLeaf();
@@ -218,6 +220,19 @@ bool Tree<DataType, EdgeType>::Contains(const DataType& data, const IsEqualCallb
     return false;
   });
   return isFound;
+}
+
+template <class DataType, class EdgeType>
+TArray<TSharedPtr<TreePoint<DataType, EdgeType>>> Tree<DataType, EdgeType>::GetLeafs()
+{
+  TArray<TSharedPtr<TreePoint<DataType, EdgeType>>> result;
+  ForEach([&](TSharedPtr<TreePoint<DataType, EdgeType>> point) {
+    if (point->IsLeaf()) {
+      result.Add(point);
+    }
+  return false;
+  });
+  return result;
 }
 
 template <class DataType, class EdgeType>

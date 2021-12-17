@@ -13,51 +13,41 @@ ABP_Level::ABP_Level()
 
 }
 
-bool IsDoor(const FPathSegment& segment) {
-  const auto& directions = segment.directionsAvailable;
-	if ( directions.Num() == 2) {
-    return (static_cast<int32>(directions[0]) + 2) % 4 == 
-						static_cast<int32> (directions[1]) ? 
-      true : false;
-	}
-        return false;
-}
-
-int32 GetNextDoorIndex(const TArray<FPathSegment>& path, int32 startIndex)
+int32 GetNextDoorIndex(const TArray<FPathSegment>& path, const ABP_Maze* maze, int32 startIndex)
 {
 	for (int32 i = startIndex; i >= 0; i--) {
-		if (IsDoor(path[i])) {
+		if (IsTypeOf(maze->GetTileType(path[i].location), MazeTileType::DOOR)) {
 			return i;
 		}
 	}
 	return 0;
 }
 TArray<FPuzzleConstructionData> GetPuzzleConstructionDatas(
-    ABP_Maze* maze, const TArray<int32>& puzzleDistanceMap)
-{
-  const UMazePath path(maze->GetTiles(), maze->end);
+    ABP_Maze* maze, const TArray<int32>& puzzleDistanceMap) {
   if (puzzleDistanceMap.Num() == 0) return {};
 
-  const auto goalPath = path.GetPathToGoal();
+  const auto goalPath = maze->path->GetPathToGoal();
 
   TArray<FPuzzleConstructionData> result;
-  int32 index = GetNextDoorIndex(goalPath, goalPath.Num() - 1);
+  int32 index = GetNextDoorIndex(goalPath, maze, goalPath.Num() - 1);
   //First door
   const auto startSegment = goalPath[index];
-  const auto direction = static_cast<Direction4>((static_cast<int32>(startSegment.directionToGoal) + 2) % 4);
+  const auto direction = SwapDirection(startSegment.directionToGoal);
   result.Add({{startSegment.location, direction}, maze, puzzleDistanceMap[0]});
 
 	const int32 length = index;
   const int32 padding = 2;
-  const int32 sizeOfPuzzleSegment = (length / (puzzleDistanceMap.Num() - 1)) - padding;
+  const int32 sizeOfPuzzleSegment = (length / (puzzleDistanceMap.Num())) - padding;
 
   int32 start = index;
   for (int32 puzzleIndex = 1; puzzleIndex < puzzleDistanceMap.Num(); puzzleIndex++) {
-    index = start + FMath::RandRange(padding, sizeOfPuzzleSegment);
-    index = GetNextDoorIndex(goalPath, index);
+    index = start - FMath::RandRange(padding, sizeOfPuzzleSegment);
+    if (index <= 0)
+      break;
+    index = GetNextDoorIndex(goalPath, maze, index);
     const auto segment = goalPath[index];
-    result.Add({{segment.location, direction}, maze, puzzleDistanceMap[puzzleIndex]});
-    start += sizeOfPuzzleSegment;
+    result.Add({{segment.location, SwapDirection(segment.directionToGoal)}, maze, puzzleDistanceMap[puzzleIndex]});
+    start -= sizeOfPuzzleSegment;
   }
 
   return result;
@@ -83,8 +73,8 @@ void ABP_Level::Construct()
       done = Cast<ABP_Puzzle, AActor>(
                  GetWorld()->SpawnActor(tempPuzzleTypes[randomIt]))
                  ->Construct(startData);
-			tempPuzzleTypes.RemoveAt(randomIt);
       randomIt = (randomIt + 1) % tempPuzzleTypes.Num();
+			tempPuzzleTypes.RemoveAt(randomIt);
     }
   }
 }

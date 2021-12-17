@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "MazeGenerator.h"
 #include "MazeTypes.h"
+#include "MazePath.h"
 
 #include "BP_Maze.generated.h"
 
@@ -22,14 +23,26 @@ protected:
 	TArray<FActor2DArray> actors = {};
 	FMazeGenerationResult mazeData;
 public:
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
+  UPROPERTY(BlueprintReadOnly, Category = "Maze")
   FIntPoint end;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Maze")
+  FIntPoint start;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Maze")
+  UMazePath* path;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
 	UClass* pathClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
 	UClass* wallsClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
+	UClass* startClass;
+
+	 UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
+	 UClass* goalClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
 	UClass* debugClass;
@@ -42,6 +55,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, category = "Maze")
 	const TArray<FTileArray>& GetTiles() const;
+
+	UFUNCTION(BlueprintCallable, category = "Maze")
+	MazeTileType GetTileType(const FIntPoint& location) const;
 
 	UFUNCTION(BlueprintCallable, category = "Maze")
 	ABP_Maze* GenerateMaze();

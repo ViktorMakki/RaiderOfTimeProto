@@ -21,5 +21,5 @@ public:
 	UClass* keyType;
 
 protected:
-	virtual bool ConstructPuzzle(const UMazePath* mazePath, ABP_Maze* maze) override;
+	virtual bool ConstructPuzzle(const UMazePath* puzzlePath, ABP_Maze* maze) override;
 };

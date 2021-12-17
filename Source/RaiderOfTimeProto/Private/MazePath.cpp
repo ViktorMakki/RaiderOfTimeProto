@@ -37,42 +37,28 @@ FIntPoint GetNextLocation(const FIntPoint& from, Direction4 direction) {
   }
 }
 
-UMazePath::UMazePath() {}
-
-UMazePath::UMazePath(const TArray<FTileArray>& maze, const FIntPoint& goal)
-{
-	Graph::PathSearcherInput<FIntPoint, Direction4> input;
-	input.startPoint =
-		TPair<FIntPoint, TArray<Direction4>>{goal,
-			GetAvailableDirections(goal, maze)},
-	input.GetNextPointCallback = GetNextLocation;
-	input.GetAvailableEdgesCallback = [&maze](const FIntPoint& location) {
-		return GetAvailableDirections(location, maze);
-	};
-	path_ = Graph::PathSearcher::DFS(input);
-  start_ = path_->GetDeepestLeaf();
-  path_->ForEachToRoot(
-      [](Graph::TreePoint<Graph::PathPoint<FIntPoint>, Direction4>& point) {
-        point.data.isToGoal = true;
-        return false;},
-      *start_);
-}
-
-UMazePath::UMazePath(const TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path)
-	:path_(path), start_(path->GetDeepestLeaf()){}
-
 TArray<FPathSegment> UMazePath::GetPathToGoal() const
 {
   TArray<FPathSegment> result;
   path_->ForEachToRoot(
       [&result](const Graph::TreePoint<Graph::PathPoint<FIntPoint>, Direction4>& point) {
-        const Direction4 goalDirection = point.GetEdgeToParent();
+        const Direction4 goalDirection = static_cast<Direction4>((static_cast<int32>(point.GetEdgeToParent()) + 2) % 4);
         TArray<Direction4> availableDirections = point.GetEdgesToChildren();
         availableDirections.Add(goalDirection);
         result.Add({point.data.data, goalDirection, availableDirections});
       	return false;
       },*start_);
   return result;
+}
+
+TArray<FPathSegment> UMazePath::GetPathEndings() const
+{
+  TArray<FPathSegment> result;
+	for (const auto point : path_->GetLeafs()) {
+    const Direction4 goalDirection = point->GetEdgeToParent();
+    result.Add({point->data.data, goalDirection, {goalDirection}});
+	}
+	return result;
 }
 
 FPathSegment UMazePath::GetRoot() const
@@ -98,6 +84,11 @@ void UMazePath::SetPath(TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Dire
   start_ = path->GetDeepestLeaf();
 }
 
+TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> UMazePath::GetPath() const
+{
+  return path_;
+}
+
 TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>>
 UMazePath::GetSegmentsInDistance(
     const TArray<FTileArray>& maze, const FIntPoint& start,
@@ -112,5 +103,30 @@ UMazePath::GetSegmentsInDistance(
   input.maxDepth = distance;
 
 	return Graph::PathSearcher::DFS(input);
+}
+
+void UMazePath::Init(const TArray<FTileArray>& maze, const FIntPoint& goal)
+{
+  Graph::PathSearcherInput<FIntPoint, Direction4> input;
+  input.startPoint =
+      TPair<FIntPoint, TArray<Direction4>>{goal,
+                                           GetAvailableDirections(goal, maze)},
+  input.GetNextPointCallback = GetNextLocation;
+  input.GetAvailableEdgesCallback = [&maze](const FIntPoint& location) {
+    return GetAvailableDirections(location, maze);
+  };
+  path_ = Graph::PathSearcher::DFS(input);
+  start_ = path_->GetDeepestLeaf();
+  path_->ForEachToRoot(
+      [](Graph::TreePoint<Graph::PathPoint<FIntPoint>, Direction4>& point) {
+        point.data.isToGoal = true;
+        return false;
+      },
+      *start_);
+}
+
+void UMazePath::Init(const TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path)
+{
+  SetPath(path);
 }
 

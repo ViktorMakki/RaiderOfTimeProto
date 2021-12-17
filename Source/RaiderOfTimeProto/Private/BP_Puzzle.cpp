@@ -13,11 +13,11 @@ ABP_Puzzle::ABP_Puzzle()
 
 bool ABP_Puzzle::Construct(const FPuzzleConstructionData& inputData)
 {
-  const UMazePath mazePath{UMazePath::GetSegmentsInDistance(
+  const UMazePath* mazePath{UMazePath::Create(UMazePath::GetSegmentsInDistance(
       inputData.maze->GetTiles(), inputData.start.startPoint,
-      inputData.start.startdirection, inputData.depth)};
+      inputData.start.startdirection, inputData.depth))};
 
-  return ConstructPuzzle(&mazePath, inputData.maze);
+  return ConstructPuzzle(mazePath, inputData.maze);
 }
 
 bool ABP_Puzzle::ConstructPuzzle(const UMazePath* mazePath, ABP_Maze* maze) {
@@ -26,5 +26,5 @@ bool ABP_Puzzle::ConstructPuzzle(const UMazePath* mazePath, ABP_Maze* maze) {
 
 Direction4 ABP_Puzzle::SwapDirection(Direction4 direction)
 {
-  return static_cast<Direction4>((static_cast<int32>(direction) + 2) % 4);
+  return ::SwapDirection(direction);
 }

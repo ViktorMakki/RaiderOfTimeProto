@@ -8,13 +8,20 @@
 UENUM(BlueprintType,
       meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class MazeTileType : uint8 {
-  WALL = 0,
+  EMPTY = 0,
   PATH = 1 << 0,
   DOOR = PATH | 1 << 1,
   GOAL = PATH | 1 << 2,
-  START = PATH | 1 << 3
+  START = PATH | 1 << 3,
+  PATHTOGOAL = PATH | 1 << 4,
+  WALL = 1 << 5,
+
 };
 ENUM_CLASS_FLAGS(MazeTileType);
+
+inline bool IsTypeOf(MazeTileType type, MazeTileType parent) {
+  return (type & parent) == parent;
+}
 
 UENUM(BlueprintType)
 enum class Direction4 : uint8 {
@@ -23,6 +30,11 @@ enum class Direction4 : uint8 {
   UP = 2 UMETA(DisplayName = "UP"),
   RIGHT = 3 UMETA(DisplayName = "RIGHT")
 };
+
+static Direction4 SwapDirection(Direction4 direction)
+{
+  return static_cast<Direction4>((static_cast<int8>(direction) + 2) % 4);
+}
 
 USTRUCT(BlueprintType)
 struct FTile {
