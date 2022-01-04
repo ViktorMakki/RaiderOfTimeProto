@@ -35,7 +35,7 @@ public:
 	FEnable onEnable;
 
 	UPROPERTY(BlueprintAssignable)
-    FDisable onDisable;
+	FDisable onDisable;
 
 	// Sets default values for this actor's properties
 	ABP_Obsticle();
@@ -50,15 +50,17 @@ public:
 	bool IsActive() const;
 
 	UFUNCTION(BlueprintCallable)
-    void Enable();
-
-    UFUNCTION(BlueprintCallable)
-    void Disable();
+	void Enable();
 
 	UFUNCTION(BlueprintCallable)
-    bool IsEnabled() const;
+	void Disable();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsEnabled() const;
 
 private:
 	bool isActive = false;
 	bool isEnable = true;
+
+  FMatrix neededSpace;
 };

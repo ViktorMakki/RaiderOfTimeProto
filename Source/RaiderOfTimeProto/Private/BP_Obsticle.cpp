@@ -46,6 +46,7 @@ void ABP_Obsticle::Enable()
 void ABP_Obsticle::Disable()
 {
   if (isEnable) {
+    Deactivate();
     isEnable = false;
     if (onDisable.IsBound()) {
       onDisable.Broadcast();

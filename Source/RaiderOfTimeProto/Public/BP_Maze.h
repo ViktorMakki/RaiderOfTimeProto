@@ -60,6 +60,9 @@ public:
 	MazeTileType GetTileType(const FIntPoint& location) const;
 
 	UFUNCTION(BlueprintCallable, category = "Maze")
+	void SetTileType(const FIntPoint& location, MazeTileType type);
+
+	UFUNCTION(BlueprintCallable, category = "Maze")
 	ABP_Maze* GenerateMaze();
 
 	UFUNCTION(BlueprintCallable, category = "Maze")

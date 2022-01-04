@@ -38,6 +38,11 @@ MazeTileType ABP_Maze::GetTileType(const FIntPoint& location) const
   return mazeData.tiles[location.X].tiles[location.Y].tile;
 }
 
+void ABP_Maze::SetTileType(const FIntPoint& location, MazeTileType type)
+{
+  mazeData.tiles[location.X].tiles[location.Y].tile = type;
+}
+
 ABP_Maze* ABP_Maze::GenerateMaze() {
 
 	mazeData = UMazeGenerator::GenerateMaze(mazeConstructionData);

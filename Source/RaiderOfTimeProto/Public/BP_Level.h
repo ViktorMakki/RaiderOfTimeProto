@@ -22,11 +22,10 @@ public:
 protected:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   UClass* mazeType;
-	
-	// for each puzzle what is the max distance
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<int32> puzzleDistanceMap;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<UClass*> availablePuzzles;
+  TArray<FMazeTrap> trapTypes;
+private:
+  ABP_Maze* maze;
+ TArray<ABP_Obsticle*> traps;
 };
