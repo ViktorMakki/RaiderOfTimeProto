@@ -102,7 +102,7 @@ UMazePath::GetSegmentsInDistance(
   };
   input.maxDepth = distance;
 
-	return Graph::PathSearcher::DFS(input);
+	return Graph::PathSearcher::BFS(input);
 }
 
 void UMazePath::Init(const TArray<FTileArray>& maze, const FIntPoint& goal)
@@ -115,7 +115,7 @@ void UMazePath::Init(const TArray<FTileArray>& maze, const FIntPoint& goal)
   input.GetAvailableEdgesCallback = [&maze](const FIntPoint& location) {
     return GetAvailableDirections(location, maze);
   };
-  path_ = Graph::PathSearcher::DFS(input);
+  path_ = Graph::PathSearcher::BFS(input);
   start_ = path_->GetDeepestLeaf();
   path_->ForEachToRoot(
       [](Graph::TreePoint<Graph::PathPoint<FIntPoint>, Direction4>& point) {

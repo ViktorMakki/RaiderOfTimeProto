@@ -40,7 +40,7 @@ bool IsFitableInDirection(const ABP_Maze* maze, const FIntPoint& start,
       if (currentLocation.X >= maze->GetTiles().Num() ||
           currentLocation.Y >= maze->GetTiles().Num())
         return false;
-      if(!IsTypeOf(maze->GetTileType(currentLocation), tiles[x][y]))
+      if(!IsTypeOf(maze->GetTileType(currentLocation), tiles[x][y]) || currentLocation == maze->start)
         return false;
     }
   }

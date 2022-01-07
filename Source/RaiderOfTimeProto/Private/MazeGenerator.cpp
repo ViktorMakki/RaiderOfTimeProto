@@ -193,15 +193,13 @@ static Door CreateSecondDoorOnWall(const Wall& wall, const Door& otherDoor)
 	return wallTemp1.Size() >= wallTemp2.Size() ? CreateDoorOnWall(wallTemp1) : CreateDoorOnWall(wallTemp2);
 }
 
-static bool ShouldCreateSecondDoor(const Chamber& chamber, int32 startSize, int32 endSize) 
+static bool ShouldCreateSecondDoor(const Wall& wall, int32 startSize, int32 endSize) 
 {
-	int32 width = chamber.Width();
-	int32 height = chamber.Height();
+	const int32 size = wall.Size();
 
-	return	(width <= startSize && width >= endSize) &&
-			(height <= startSize && height >= endSize) &&
+	return ((size < startSize) && ( size > endSize)) &&
 			// Can not add more door if the chamber is smaller
-			(width >= 5 && height >= 5);
+			(size >= 5);
 }
 
 static void CreateDoors(FMazeGenerationResult& result,
@@ -214,7 +212,7 @@ static void CreateDoors(FMazeGenerationResult& result,
 	door.Draw(result.tiles, param.recursionLevel);
 	result.doors.Add(fDoor);
 
-	if (ShouldCreateSecondDoor(param.chamber, param.circleSizeStart, param.circleSizeEnd)) {
+	if (ShouldCreateSecondDoor(splitWall, param.circleSizeStart, param.circleSizeEnd)) {
 		const Door secondDoor = CreateSecondDoorOnWall(splitWall, door);
 		secondDoor.Draw(result.tiles, param.recursionLevel);
 		const FDoor secondFDoor = secondDoor.Cast(param.chamber, isHorizontal, param.recursionLevel);
@@ -342,40 +340,46 @@ static Door CreateGoalDoor(const Chamber& chamber, Direction direction)
 	}
 }
 
-static std::vector<Door> CreateStartDoorsClockwise(const std::vector<Chamber>& startChambers, Direction startDirection)
+static void CreateStartDoorsClockwise(
+    FMazeGenerationResult& generationResult,
+		const std::vector<Chamber>& startChambers,
+    const SplitChamberParameters& param,																								 
+		Direction startDirection)
 {
-	std::vector<Door> result{ 8 };
-	int32 startIndex = startDirection * 2;
-	result[0] = CreateGoalDoor(startChambers[startIndex], startDirection);
-
+	const int32 startIndex = startDirection * 2;
 	Direction direction = static_cast<Direction>((startDirection + 1) % 4);
 	for (int32 i = 0; i < 7; i++) {
-		result[i + 1] = CreateDoorOnWall(startChambers[(startIndex + i) % 8].GetWalls()[direction]);
+		CreateDoors(generationResult,
+								startChambers[(startIndex + i) % 8].GetWalls()[direction],
+								param);
 		direction = ( i % 2 == 0 )? static_cast<Direction>((direction + 1) % 4) : direction;
 	}
-	return result;
 }
 
-static std::vector<Door> CreateStartDoorsUnclockwise(const std::vector<Chamber>& startChambers, Direction startDirection)
+static void CreateStartDoorsUnclockwise(
+    FMazeGenerationResult& generationResult,
+    const std::vector<Chamber>& startChambers,
+    const SplitChamberParameters& param, Direction startDirection)
 {
-	std::vector<Door> result{ 8 };
-	int32 startIndex = startDirection * 2;
-	result[0] = CreateGoalDoor(startChambers[startIndex], startDirection);
-
+  const int32 startIndex = startDirection * 2;
 	Direction direction = (startDirection - 1) < 0 ? static_cast<Direction>(3) : static_cast<Direction>(startDirection - 1);
 	for (int32 i = 0; i < 7; i++) {
-		int32 dif = startIndex - i;
-		int32 index = dif < 0 ? 8 + dif : dif;
-		result[i + 1] = CreateDoorOnWall(startChambers[index].GetWalls()[direction]);
+    int32 dif = startIndex - i;
+    int32 index = dif < 0 ? 8 + dif : dif;
+		CreateDoors(generationResult, startChambers[index].GetWalls()[direction],
+								param);
 		direction = (i % 2 == 0) ? static_cast<Direction>((direction - 1) < 0 ? 3 : (direction - 1)) : direction;
 	}
-	return result;
 }
 
-static std::vector<Door> CreateStartDoors(const std::vector<Chamber>& startChambers, Direction startDirection, bool isClockwise)
+static void CreateStartDoors(FMazeGenerationResult& generationResult,
+                             const std::vector<Chamber>& startChambers,
+                             const SplitChamberParameters& param,
+                             Direction startDirection,
+                             bool isClockwise)
 {
-	return isClockwise ? CreateStartDoorsClockwise(startChambers, startDirection) :
-							   CreateStartDoorsUnclockwise(startChambers, startDirection);
+	isClockwise ? CreateStartDoorsClockwise(generationResult, startChambers, param, startDirection) :
+								CreateStartDoorsUnclockwise(generationResult, startChambers,param, startDirection);
 }
 
 #pragma endregion
@@ -393,7 +397,7 @@ FMazeGenerationResult UMazeGenerator::GenerateMaze(const FMazeGeneratorConstruct
 	firstChamber.leftBottom = { 0, 0 };
 	firstChamber.rightTop = { width - 1, height - 1 };
 
-	Chamber goalChamber = CreateGoalChamber(result.tiles, firstChamber, data.goalWidth, data.goalHeight);
+	const Chamber goalChamber = CreateGoalChamber(result.tiles, firstChamber, data.goalWidth, data.goalHeight);
 
 	std::vector<Chamber> startChambers = CreateStartChambers(firstChamber, goalChamber);
 	int8 startSpaceDirection = RandomStartSpace(startChambers);
@@ -402,7 +406,9 @@ FMazeGenerationResult UMazeGenerator::GenerateMaze(const FMazeGeneratorConstruct
 
 	bool isClockwiseGenerated = FMath::RandBool();
 	const Direction startDirection = isClockwiseGenerated ? static_cast<Direction>(((startSpaceDirection / 2) + 1) % 4) : static_cast<Direction>((startSpaceDirection / 2));
-	std::vector<Door> startDoors = CreateStartDoors(startChambers, startDirection, isClockwiseGenerated);
+	CreateStartDoors(result, startChambers,
+						{startChambers[0], 0, data.maxWallSize, data.minWallSize},
+										startDirection, isClockwiseGenerated);
 	
 	for (const auto& c : startChambers) {
 		for (const auto& wall : c.GetWalls()) {
@@ -411,27 +417,21 @@ FMazeGenerationResult UMazeGenerator::GenerateMaze(const FMazeGeneratorConstruct
 			wall.Draw(result.tiles, 1);
 		}
 		SplitChamber(result,
-			{ c, 1, data.CircleSizeStart, data.CircleSizeEnd });
+			{ c, 1, data.maxWallSize, data.minWallSize });
 	}
 
 	Direction direction = startDirection;
 	bool isHorizontal = direction % 2 == 0;
 
 	//frist door to goal
-	result.doors.Add(startDoors[0].Cast(firstChamber, isHorizontal, 1));
-	startDoors[0].Draw(result.tiles, 0);
-	isHorizontal = !isHorizontal;
-	
-	for (int8 i = 1; i < startDoors.size(); i++) {
-		if (startDoors[i].location == FIntPoint{ 0,0 })
-			continue;
-		result.doors.Add(startDoors[i].Cast(firstChamber, isHorizontal, 1));
-		startDoors[i].Draw(result.tiles, 0);
-		if (i % 2 != 0) {
-			isHorizontal = !isHorizontal;
-		}
-	}
+  const Door goalDoor = CreateGoalDoor(startChambers[startDirection * 2], startDirection);
+	goalDoor.Draw(result.tiles, 0);
+	result.doors.Add(goalDoor.Cast(firstChamber, isHorizontal, 1));
 
+	for (const auto& fdoor : result.doors) {
+		Door door{fdoor.location};
+		door.Draw(result.tiles, 0);
+	}
 	return result;
 }
 

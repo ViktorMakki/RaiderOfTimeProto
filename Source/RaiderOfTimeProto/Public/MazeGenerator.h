@@ -26,11 +26,11 @@ struct FMazeGeneratorConstructData {
 
   /**From what chamber size is enabled to make circle*/
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 CircleSizeStart = 0;
+  int32 maxWallSize = 0;
 
   /**From what chamber size is enabled to make circle*/
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 CircleSizeEnd = 0;
+  int32 minWallSize = 0;
 };
 
 USTRUCT(BlueprintType)
