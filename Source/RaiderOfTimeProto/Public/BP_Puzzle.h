@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "BP_Maze.h"
 #include "MazePath.h"
-#include "BP_Obsticle.h"
 
 #include "BP_Puzzle.generated.h"
 

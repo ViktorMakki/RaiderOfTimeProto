@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Activable.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 
 #include "BP_Maze.h"
-#include "BP_Obsticle.h"
 
 #include "TrapGenerator.generated.h"
 
@@ -20,5 +20,5 @@ class RAIDEROFTIMEPROTO_API UTrapGenerator : public UBlueprintFunctionLibrary
 public:
 	//returns the generated objects
  UFUNCTION(BlueprintCallable)
- static TArray<ABP_Obsticle*> GenerateTraps(ABP_Maze* maze, const TArray<FMazeTrap>& traps);
+ static TArray<AActivable*> GenerateTraps(ABP_Maze* maze, const TArray<FMazeTrap>& traps);
 };

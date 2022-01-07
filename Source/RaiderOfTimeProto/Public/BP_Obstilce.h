@@ -4,29 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "Activable.h"
+#include "MazeTypes.h"
 #include "GameFramework/Actor.h"
-#include "BP_Puzzle.h"
-#include "BP_Level.generated.h"
+#include "BP_Obstilce.generated.h"
 
 UCLASS()
-class RAIDEROFTIMEPROTO_API ABP_Level : public AActor
+class RAIDEROFTIMEPROTO_API ABP_Obstilce : public AActivable
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ABP_Level();
+	ABP_Obstilce();
 
 	UFUNCTION(BlueprintCallable)
-	void Construct();
+  void SetSymbol(Symbol newSymbol);
 
 protected:
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UClass* mazeType;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TArray<FMazeTrap> trapTypes;
-private:
-  ABP_Maze* maze;
- TArray<AActivable*> traps;
+  Symbol symbol;
 };

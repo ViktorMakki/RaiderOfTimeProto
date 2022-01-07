@@ -4,7 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "BP_Obsticle.generated.h"
+
+#include "Activable.generated.h"
 
 UDELEGATE(BlueprintCallable)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FActivate);
@@ -19,7 +20,7 @@ UDELEGATE(BlueprintCallable)
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FDisable);
 
 UCLASS()
-class RAIDEROFTIMEPROTO_API ABP_Obsticle : public AActor
+class RAIDEROFTIMEPROTO_API AActivable : public AActor
 {
 	GENERATED_BODY()
 	
@@ -36,9 +37,6 @@ public:
 
 	UPROPERTY(BlueprintAssignable)
 	FDisable onDisable;
-
-	// Sets default values for this actor's properties
-	ABP_Obsticle();
 
 	UFUNCTION(BlueprintCallable)
 	void Activate();
@@ -61,6 +59,4 @@ public:
 private:
 	bool isActive = false;
 	bool isEnable = true;
-
-  FMatrix neededSpace;
 };

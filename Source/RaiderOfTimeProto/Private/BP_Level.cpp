@@ -69,7 +69,8 @@ void ABP_Level::Construct()
 #pragma region TrapGeneration
   if (trapTypes.IsEmpty()) return;
   traps = UTrapGenerator::GenerateTraps(maze, trapTypes);
-#pragma endregion 
+#pragma endregion
+
   /*const TArray<FPuzzleConstructionData> puzzleInputDatas =
       GetPuzzleConstructionDatas(maze, puzzleDistanceMap);
 

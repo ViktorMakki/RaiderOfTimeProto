@@ -33,6 +33,17 @@ enum class Direction4 : uint8 {
 };
 
 UENUM(BlueprintType)
+enum class Symbol : uint8 {
+  A = 0 UMETA(DisplayName = "A"),
+  B = 1 UMETA(DisplayName = "B"),
+  C = 2 UMETA(DisplayName = "C"),
+  D = 3 UMETA(DisplayName = "D"),
+  E = 4 UMETA(DisplayName = "E"),
+  F = 4 UMETA(DisplayName = "F"),
+  G = 4 UMETA(DisplayName = "G")
+};
+
+UENUM(BlueprintType)
 enum class TrapSpase : uint8 {
   WAY1 = 0 UMETA(DisplayName = "WAY1"),
   WAY2 = 1 UMETA(DisplayName = "WAY2"),
@@ -177,7 +188,7 @@ struct FMazeTrap {
   GENERATED_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UClass* trapType;
+  TArray<UClass*> trapTypes;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TrapSpase requiredSpace;

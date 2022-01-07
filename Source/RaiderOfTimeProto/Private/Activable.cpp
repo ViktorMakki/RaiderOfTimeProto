@@ -1,17 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "BP_Obsticle.h"
+#include "Activable.h"
 
-// Sets default values
-ABP_Obsticle::ABP_Obsticle()
-{
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = false;
-
-}
-
-void ABP_Obsticle::Activate()
+void AActivable::Activate()
 {
 	if (isEnable && !isActive) {
 	  isActive = true;
@@ -20,7 +12,7 @@ void ABP_Obsticle::Activate()
       }  
 	}
 }
-void ABP_Obsticle::Deactivate()
+void AActivable::Deactivate()
 {
   if (isActive) {
     isActive = false;
@@ -30,10 +22,10 @@ void ABP_Obsticle::Deactivate()
   }
 }
 
-bool ABP_Obsticle::IsActive() const
+bool AActivable::IsActive() const
 { return isActive; }
 
-void ABP_Obsticle::Enable()
+void AActivable::Enable()
 {
   if (!isEnable) {
     isEnable = true;
@@ -43,7 +35,7 @@ void ABP_Obsticle::Enable()
   }
 }
 
-void ABP_Obsticle::Disable()
+void AActivable::Disable()
 {
   if (isEnable) {
     Deactivate();
@@ -54,7 +46,7 @@ void ABP_Obsticle::Disable()
   }
 }
 
-bool ABP_Obsticle::IsEnabled() const
+bool AActivable::IsEnabled() const
 { return isEnable; }
 
 

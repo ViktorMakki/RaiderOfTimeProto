@@ -85,25 +85,30 @@ void FillMaze(ABP_Maze* maze, const FIntPoint& start,const TrapSpaceTiles& tiles
 	}
 }
 
-ABP_Obsticle* TryPlaceTrap(ABP_Maze* maze,  const FMazeTrap& trap, const FIntPoint& start)
+UClass* GetRandomType(const TArray<UClass*> types)
+{
+  return types[FMath::RandRange(0, types.Num() - 1)];
+}
+
+AActivable* TryPlaceTrap(ABP_Maze* maze,  const FMazeTrap& trap, const FIntPoint& start)
 {
   const FitResult fit = IsFitable(maze, start, trap.requiredSpace);
   if (fit.isFitable) {
     const FIntPoint spawnLocation = start + FIntPoint{1, 1};
     FillMaze(maze, start, fit.usedTiles);
-    return  Cast<ABP_Obsticle>(maze->SpawnActorAt(trap.trapType, spawnLocation, fit.dir));
+    return Cast<AActivable>(maze->SpawnActorAt(GetRandomType(trap.trapTypes), spawnLocation, fit.dir));
   }
 	return nullptr;
 }
 
-TArray<ABP_Obsticle*> UTrapGenerator::GenerateTraps(ABP_Maze* maze, const TArray<FMazeTrap>& traps)
+TArray<AActivable*> UTrapGenerator::GenerateTraps(ABP_Maze* maze, const TArray<FMazeTrap>& traps)
 {
-  TArray<ABP_Obsticle*> result;
+  TArray<AActivable*> result;
 
   for (int32 x = 0; x < maze->GetTiles().Num(); x ++) {
     for (int32 y = 0; y < maze->GetTiles()[x].tiles.Num(); y ++) {
       for (const auto& trap : traps) {
-        ABP_Obsticle* newTrap = TryPlaceTrap(maze, trap, {x, y});
+        AActivable* newTrap = TryPlaceTrap(maze, trap, {x, y});
         if (newTrap) {
           result.Add(newTrap);
         }

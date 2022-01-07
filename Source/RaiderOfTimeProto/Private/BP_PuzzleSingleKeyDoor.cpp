@@ -2,10 +2,11 @@
 
 
 #include "BP_PuzzleSingleKeyDoor.h"
+#include "Activable.h"
 
-ABP_Obsticle* Cast(AActor* actor)
+AActivable* Cast(AActor* actor)
 {
-  return Cast<ABP_Obsticle, AActor>(actor);
+  return Cast<AActivable, AActor>(actor);
 }
 
 bool ABP_PuzzleSingleKeyDoor::ConstructPuzzle(const UMazePath* puzzlePath, ABP_Maze* maze)
@@ -27,6 +28,6 @@ bool ABP_PuzzleSingleKeyDoor::ConstructPuzzle(const UMazePath* puzzlePath, ABP_M
   key->Enable();
   door->Enable();
 
-  key->onActivate.AddDynamic(door, &ABP_Obsticle::Activate);
+  key->onActivate.AddDynamic(door, &AActivable::Activate);
 	return true;
 }
