@@ -3,14 +3,26 @@
 
 #include "SymbolRule.h"
 
-TArray<ABP_Obstilce*> ASymbolRule::GetObsticles() const
-{ return obsticles; }
+//TArray<AObstilce*> ASymbolRule::GetObsticles() const
+//{ return obsticles; }
 
-void ASymbolRule::AddObsticle(ABP_Obstilce* obsticle) {
+FSymbol ASymbolRule::GetSymbol() const
+{ return symbol; }
+
+void ASymbolRule::AddObsticle(AObstilce* obsticle) {
+  if (!obsticle) return;
   obsticle->SetSymbol(symbol);
-  obsticles.Add(obsticle);
   onActivate.AddDynamic(obsticle, &AActivable::Enable);
   onDeactivate.AddDynamic(obsticle, &AActivable::Disable);
 }
 
-void ASymbolRule::Init(Symbol newSymbol) { symbol = newSymbol; }
+void ASymbolRule::Clear()
+{
+	if (onActivate.IsBound()) onActivate.Clear();
+	if(onDeactivate.IsBound()) onDeactivate.Clear();
+	onActivate = {};
+	onDeactivate = {};
+	//obsticles.Reset();
+}
+
+void ASymbolRule::Init(FSymbol newSymbol) { symbol = newSymbol; }

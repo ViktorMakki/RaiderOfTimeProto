@@ -3,6 +3,45 @@
 
 #include "TrapGenerator.h"
 
+#include <unordered_map>
+#include <vector>
+
+#include "Activable.h"
+#include "MazeTypes.h"
+#include "UtilsLibrary.h"
+
+using TrapSpaceTiles = std::vector<std::vector<MazeTileType>>;
+
+static std::unordered_map<TrapSpase, TrapSpaceTiles> GetTrapSpaceMap() {
+  std::unordered_map<TrapSpase, std::vector<std::vector<MazeTileType>>> result;
+  result[TrapSpase::WAY1] = {
+      {MazeTileType::WALL, MazeTileType::WALL, MazeTileType::WALL},
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL}};
+
+  result[TrapSpase::WAY2] = {
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL}};
+
+  result[TrapSpase::WAY3] = {
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
+      {MazeTileType::PATH, MazeTileType::PATH, MazeTileType::PATH},
+      {MazeTileType::WALL, MazeTileType::WALL, MazeTileType::WALL}};
+
+  result[TrapSpase::WAY4] = {
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
+      {MazeTileType::PATH, MazeTileType::PATH, MazeTileType::PATH},
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL}};
+
+  result[TrapSpase::TURN] = {
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::PATH},
+      {MazeTileType::WALL, MazeTileType::WALL, MazeTileType::WALL}};
+
+  return result;
+}
+
 void ReverseElementsRowWise(TrapSpaceTiles& matrix) {
   const int32 n = 3;
   for (int32 i = 0; i < n; ++i) {
@@ -31,16 +70,20 @@ void RotateLeft(TrapSpaceTiles& tiles)
   ReverseElementsRowWise(tiles);
 }
 
-bool IsFitableInDirection(const ABP_Maze* maze, const FIntPoint& start,
+bool IsFitableInDirection(const ATileMap* tileMap, const FIntPoint& start,
                           const TrapSpaceTiles& tiles)
 {
+  const auto size = tileMap->Size();
   for (int32 x = 0; x < 3; x++) {
     for (int32 y = 0; y < 3; y++) {
       FIntPoint currentLocation = start + FIntPoint{x, y};
-      if (currentLocation.X >= maze->GetTiles().Num() ||
-          currentLocation.Y >= maze->GetTiles().Num())
+      if (currentLocation.X >= size.X ||
+          currentLocation.Y >= size.Y)
         return false;
-      if(!IsTypeOf(maze->GetTileType(currentLocation), tiles[x][y]) || currentLocation == maze->start)
+      if(!IsTypeOf(static_cast<MazeTileType>(tileMap->GetTileTag(currentLocation)), tiles[x][y]) ||
+          IsTypeOf(static_cast<MazeTileType>(tileMap->GetTileTag(currentLocation)), MazeTileType::OBSTICLE) ||
+          IsTypeOf(static_cast<MazeTileType>(tileMap->GetTileTag(currentLocation)), MazeTileType::GOAL) ||
+          IsTypeOf(static_cast<MazeTileType>(tileMap->GetTileTag(currentLocation)), MazeTileType::START))
         return false;
     }
   }
@@ -54,10 +97,10 @@ struct FitResult
   TrapSpaceTiles usedTiles;
 };
 
-FitResult IsFitable(const ABP_Maze* maze, const FIntPoint& start,
+FitResult IsFitable(const ATileMap* tileMap, const FIntPoint& start,
                     TrapSpaceTiles tiles) {
   for (int32 dir = 0; dir < 4; dir++) {
-    if (IsFitableInDirection(maze, start, tiles)) {
+    if (IsFitableInDirection(tileMap, start, tiles)) {
       return {true, static_cast<Direction4>(dir), tiles};
     }
     RotateLeft(tiles);
@@ -65,55 +108,52 @@ FitResult IsFitable(const ABP_Maze* maze, const FIntPoint& start,
   return {false, {}, {}};
 }
 
-FitResult IsFitable(const ABP_Maze* maze, const FIntPoint& start,
+FitResult IsFitable(const ATileMap* tileMap, const FIntPoint& start,
                     TrapSpase trapSpase) {
-  return IsFitable(maze, start, GetTrapSpaceMap()[trapSpase]);
+  return IsFitable(tileMap, start, GetTrapSpaceMap()[trapSpase]);
 }
 
-void FillMaze(ABP_Maze* maze, const FIntPoint& start,const TrapSpaceTiles& tiles)
+void FillMaze(ATileMap* tileMap, const FIntPoint& start,const TrapSpaceTiles& tiles)
 {
-	for (int32 x = 0; x < 3; x++) {
-		for (int32 y = 0; y < 3; y++) {
-			FIntPoint currentLocation = start + FIntPoint{x, y};
-			if (currentLocation.X >= maze->GetTiles().Num() ||
-					currentLocation.Y >= maze->GetTiles().Num())
-						return ;
+  const auto size = tileMap->Size();
+  for (int32 x = 0; x < 3; x++) {
+    for (int32 y = 0; y < 3; y++) {
+      FIntPoint currentLocation = start + FIntPoint{x, y};
+      if (currentLocation.X >= size.X || currentLocation.Y >= size.Y)
+        return;
       if (IsTypeOf(tiles[x][y], MazeTileType::PATH)) {
-        maze->SetTileType(currentLocation, MazeTileType::OBSTICLE);
+        tileMap->SetTileTag(currentLocation, static_cast<int32>(MazeTileType::OBSTICLE));
       }
 		}
 	}
 }
 
-UClass* GetRandomType(const TArray<UClass*> types)
+AActivable* TryPlaceTrap(ATileMap* tileMap,  const FTrap& trap, const FIntPoint& start)
 {
-  return types[FMath::RandRange(0, types.Num() - 1)];
-}
-
-AActivable* TryPlaceTrap(ABP_Maze* maze,  const FMazeTrap& trap, const FIntPoint& start)
-{
-  const FitResult fit = IsFitable(maze, start, trap.requiredSpace);
+  const FitResult fit = IsFitable(tileMap, start, trap.requiredSpace);
   if (fit.isFitable) {
     const FIntPoint spawnLocation = start + FIntPoint{1, 1};
-    FillMaze(maze, start, fit.usedTiles);
-    return Cast<AActivable>(maze->SpawnActorAt(GetRandomType(trap.trapTypes), spawnLocation, fit.dir));
+    FillMaze(tileMap, start, fit.usedTiles);
+    return Cast<AActivable>(tileMap->SpawnActorAt(
+        UUtilsLibrary::GetRandomType(trap.trapTypes), spawnLocation, fit.dir));
   }
 	return nullptr;
 }
 
-TArray<AActivable*> UTrapGenerator::GenerateTraps(ABP_Maze* maze, const TArray<FMazeTrap>& traps)
+void ATrapGenerator::Destruct()
 {
-  TArray<AActivable*> result;
+}
 
-  for (int32 x = 0; x < maze->GetTiles().Num(); x ++) {
-    for (int32 y = 0; y < maze->GetTiles()[x].tiles.Num(); y ++) {
-      for (const auto& trap : traps) {
-        AActivable* newTrap = TryPlaceTrap(maze, trap, {x, y});
-        if (newTrap) {
-          result.Add(newTrap);
-        }
+void ATrapGenerator::Construct()
+{
+  if (!tileMap) return;
+  const auto size = tileMap->Size();
+  for (int32 x = 0; x < size.X; x++) {
+    for (int32 y = 0; y < size.Y; y++) {
+      for (const auto& trap : trapTypes) {
+      	TryPlaceTrap(tileMap, trap, {x, y});
       }
     }
   }
-  return result;
 }
+

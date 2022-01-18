@@ -8,6 +8,12 @@
 
 #include "MazePath.generated.h"
 
+enum class SearchAlgorithm
+{
+	BFS,
+	DFS
+};
+
 /**
  * 
  */
@@ -29,22 +35,28 @@ public:
 	UFUNCTION(BlueprintCallable)
   FPathSegment GetFarestLeaf() const;
 
+	UFUNCTION(BlueprintCallable)
+  UMazePath* StepToGoal(int32 stepCount) const;
+
   void SetPath(TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path);
 
   TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> GetPath() const;
 
   static TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>>
-	GetSegmentsInDistance(const TArray<FTileArray>& maze,
+  GetSegmentsInDistance(const ATileMap* maze,
 												const FIntPoint& start,
 												Direction4 startDirection,
 												int32 distance);
 
  private:
-  void Init(const TArray<FTileArray>& maze, const FIntPoint& goal);
+  void Init(const ATileMap* maze, const FIntPoint& start,
+            SearchAlgorithm algo = SearchAlgorithm::BFS);
+  void Init(const ATileMap* maze, const FIntPoint& start, const FIntPoint& goal,
+            SearchAlgorithm algo = SearchAlgorithm::BFS);
+
   void Init(const TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path);
 
 	TSharedPtr<Graph::Tree<Graph::PathPoint<FIntPoint>, Direction4>> path_;
-  TSharedPtr<Graph::TreePoint<Graph::PathPoint<FIntPoint>, Direction4>> start_;
 
 public:
 	template <class... Types>

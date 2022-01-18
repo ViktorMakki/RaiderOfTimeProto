@@ -58,5 +58,5 @@ public:
 
 private:
 	bool isActive = false;
-	bool isEnable = true;
+	bool isEnable = false;
 };

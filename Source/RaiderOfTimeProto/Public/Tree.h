@@ -33,6 +33,15 @@ struct TreePoint : public IDObject{
 
   bool IsLeaf() const { return children.size() == 0; }
 
+  TArray<TSharedPtr<TreePoint<DataType, EdgeType>>> GetChildren()
+  {
+    TArray<TSharedPtr<TreePoint<DataType, EdgeType>>> result;
+  	for (auto child : children) {
+      result.Add(child.second);
+    }
+  	return result;
+  }
+
 	EdgeType GetEdgeToParent() const
   {
     if (!parent) return {};
@@ -55,6 +64,8 @@ struct TreePoint : public IDObject{
 template <class DataType, class EdgeType>
 class Tree {
 public:
+  Tree() = default;
+  Tree(TSharedPtr<TreePoint<DataType, EdgeType>> root) : root{root} {}
 	using IsEqualCallback = std::function<bool(const DataType& data1, const DataType& data2)>;
 
   // return true if it should brake

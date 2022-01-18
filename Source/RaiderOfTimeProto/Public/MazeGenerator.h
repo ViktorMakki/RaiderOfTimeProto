@@ -3,62 +3,49 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Kismet/BlueprintFunctionLibrary.h"
-#include "MazeTypes.h"
+#include "Generator.h"
+#include "TileMap.h"
 #include "MazeGenerator.generated.h"
 
-
 USTRUCT(BlueprintType)
-struct FMazeGeneratorConstructData {
+struct FMazeGeneratorInput {
   GENERATED_BODY()
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 mazeWidth = 21;
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+  TArray<UClass*> wallTypes;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 mazeHeight = 21;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+  TArray<UClass*> pathTypes;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 goalWidth = 3;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+  TArray<UClass*> gateTypes;
 
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 goalHeight = 3;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+ UClass* startType;
 
-  /**From what chamber size is enabled to make circle*/
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 maxWallSize = 0;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+ UClass* goalType;
 
-  /**From what chamber size is enabled to make circle*/
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  int32 minWallSize = 0;
+ UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+ UClass* goalGateType;
 };
 
-USTRUCT(BlueprintType)
-struct FMazeGenerationResult {
-  GENERATED_BODY()
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  TArray<FTileArray> tiles;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  TArray<FChamber> chambers;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  TArray<FDoor> doors;
-
-  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Maze")
-  TArray<FSiblingDoors> siblingDoors;
-};
-
-UCLASS(Blueprintable)
-class RAIDEROFTIMEPROTO_API UMazeGenerator : public UBlueprintFunctionLibrary
+/**
+ * Generates the walls, paths, doors, start and goal actors
+ * and sets up the tags in the tileMap
+ */
+UCLASS()
+class RAIDEROFTIMEPROTO_API AMazeGenerator : public AGenerator
 {
 	GENERATED_BODY()
-	
 public:
-	UFUNCTION(BlueprintCallable, category = "Maze")
-	static FMazeGenerationResult GenerateMaze(const FMazeGeneratorConstructData& data);
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+  ATileMap* tileMap;
 
-	UFUNCTION(BlueprintCallable, category = "Maze")
-		static bool IsTypeOf(MazeTileType child, MazeTileType parent);
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Generator")
+  FMazeGeneratorInput input;
+
+  virtual void Destruct() override;
+  
+  virtual void Construct() override;
 };

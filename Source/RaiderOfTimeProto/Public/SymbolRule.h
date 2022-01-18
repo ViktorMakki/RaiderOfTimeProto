@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Activable.h"
 #include "MazeTypes.h"
-#include "BP_Obstilce.h"
+#include "Obstilce.h"
 #include "UObject/NoExportTypes.h"
 #include "SymbolRule.generated.h"
 
@@ -17,25 +17,32 @@ class RAIDEROFTIMEPROTO_API ASymbolRule : public AActivable
 {
 	GENERATED_BODY()
 public:
-	UFUNCTION(BlueprintCallable)
-	TArray<ABP_Obstilce*> GetObsticles() const;
+	//UFUNCTION(BlueprintCallable)
+	//TArray<AObstilce*> GetObsticles() const;
 
 	UFUNCTION(BlueprintCallable)
-	void AddObsticle(ABP_Obstilce* obsticle);
+	FSymbol GetSymbol() const;
+
+	UFUNCTION(BlueprintCallable)
+	void AddObsticle(AObstilce* obsticle);
+
+	UFUNCTION(BlueprintCallable)
+	void Clear();
 
 	template <class... Types>
-	static ASymbolRule* Create(const Types&... args);
+	static ASymbolRule* Create(UWorld* world, const Types&... args);
 
 private:
- TArray<ABP_Obstilce*> obsticles;
- Symbol symbol;
+ //TArray<AObstilce*> obsticles;
+ FSymbol symbol;
 
-	void Init(Symbol newSymbol);
+	void Init(FSymbol newSymbol);
 };
 
 template <class... Types>
-ASymbolRule* ASymbolRule::Create(const Types&... args) {
-  auto symbolRule = NewObject<ASymbolRule>();
-  symbolRule->Init(args...);
+ASymbolRule* ASymbolRule::Create(UWorld* world, const Types&... args) {
+  auto symbolRule = Cast<ASymbolRule>(world->SpawnActor(ASymbolRule::StaticClass()));
+  if (!symbolRule) return nullptr;
+	symbolRule->Init(args...);
   return symbolRule;
 }

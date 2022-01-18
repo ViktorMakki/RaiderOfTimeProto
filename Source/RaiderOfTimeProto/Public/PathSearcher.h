@@ -15,7 +15,7 @@ struct PathPoint {
 template<class DataType, class EdgeType>
 struct PathSearchResult 
 {
-	//path_ starts with goal and ends with the start_ point
+	//path_ starts with goal and ends with the goal_ point
 	//Contains points with 1 edge
   Tree<PathPoint<DataType>, EdgeType> pathTree;
 };
@@ -78,11 +78,9 @@ bool PathSearcher::DFSStep(
 			int16 depth)
 {
 
-	bool isGoalFound = false;
-
 	if (inputData.IsGoalCallback(currentPoint->data.data)) {
     currentPoint->data.isToGoal = true;
-		isGoalFound = true;
+		return true;
 	}
 
 	if (inputData.maxDepth > 0 && depth++ > inputData.maxDepth) {
@@ -106,11 +104,10 @@ bool PathSearcher::DFSStep(
 		currentPoint->children[edge] = newPoint;
 		if (DFSStep(tree, newPoint, inputData, depth)) {
 			currentPoint->data.isToGoal = true;
-			isGoalFound = true;
+			return true;
 		}
 	}
-
-	return isGoalFound;
+	return false;
 }
 
 template <class DataType, class EdgeType>
@@ -194,7 +191,6 @@ TSharedPtr<Tree<PathPoint<DataType>, EdgeType>> PathSearcher::BFS(
 			points.Add(newPoint);
 		}
 	}
-
 	return result;
 }
 
