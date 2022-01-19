@@ -38,6 +38,24 @@ void Shuffle(TArray<Type>& array) {
   }
 }
 
+template <class Type>
+void Reverse(TArray<Type>& array) {
+  Algo::Reverse(array);
+}
+
+
+template <class Type>
+TArray<Type> Range(const TArray<Type>& array, int32 fromIndex, int32 toIndex)
+{
+  TArray<Type> result;
+  if (fromIndex >= array.Num() || toIndex >= array.Num()) return result;
+  for (int32 i = fromIndex; i <= toIndex; i++) {
+    result.Add(array[i]);
+  }
+  return result;
+}
+
+
 /**
  * 
  */

@@ -396,7 +396,8 @@ void GenerateMaze(ATileMap* tileMap, const FMazeTileGeneratorInput& input)
       if (wall.Size() < 2) continue;
       wall.Draw(tileMap);
     }
-    SplitChamber(tileMap, siblingGates, {c, 1, input.maxWallSize, input.minWallSize});
+    SplitChamber(tileMap, siblingGates,
+                 {c,1, input.minWallSize, input.maxWallSize});
   }
 
   // frist gate to goal
@@ -420,7 +421,7 @@ void GenerateMaze(ATileMap* tileMap, const FMazeTileGeneratorInput& input)
 	const auto path = UMazePath::Create(tileMap, goalGate.location);
   const auto pathToGoal = path->GetPathToGoal();
 	if (pathToGoal.Num() < 2) return;
-  const auto start = pathToGoal[1].location;
+  const auto start = pathToGoal[pathToGoal.Num() - 1].location;
   tileMap->SetTileTag(start, static_cast<int32>(MazeTileType::START));
 }
 

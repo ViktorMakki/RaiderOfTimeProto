@@ -35,5 +35,6 @@ public:
   
   virtual void Destruct() override;
   
+  //Constructs keys at least for all existing symbols
   virtual void Construct() override;
 };

@@ -53,6 +53,7 @@ TArray<FPathSegment> UMazePath::GetPathToGoal() const
         result.Add({point.data.data, goalDirection, availableDirections});
       	return false;
       },*goal);
+  Reverse(result);
   return result;
 }
 
