@@ -8,6 +8,11 @@
 
 void ASymbolGenerator::Destruct()
 {
+  TArray<AActor*> symbols;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASymbolRule::StaticClass(),symbols);
+  for (auto symbol : symbols) {
+    if (symbol) symbol->Destroy();
+  }
 }
 
 void ASymbolGenerator::Construct()

@@ -351,11 +351,13 @@ int32 Distance(const SiblingGates& gates) {
 }
 
 TArray<SiblingGates> FilterByDistance(const TArray<SiblingGates>& gates,
-                                       int32 minDistance) {
+                                       int32 minDistance, const FIntPoint& startSpace) {
   TArray<SiblingGates> result;
   for (const auto& gate : gates) {
-    if (Distance(gate) >= minDistance) {
-      result.Add(gate);
+    if( (Distance(gate) >= minDistance && 
+      (startSpace - gate.gate1.location).Size() >= minDistance) && 
+      (startSpace - gate.gate2.location).Size() >= minDistance){
+        result.Add(gate);
     }
   }
   return result;
@@ -380,7 +382,7 @@ void GenerateMaze(ATileMap* tileMap, const FMazeTileGeneratorInput& input)
   std::vector<Chamber> startChambers =
       CreateStartChambers(firstChamber, goalChamber);
   const int8 startSpaceDirection = RandomStartSpace(startChambers);
-  FIntPoint startSpace = RandomPathInChamber(startChambers[startSpaceDirection]);
+  const FIntPoint startSpace = RandomPathInChamber(startChambers[startSpaceDirection]);
 
   bool isClockwiseGenerated = FMath::RandBool();
   const Direction startDirection =
@@ -409,7 +411,8 @@ void GenerateMaze(ATileMap* tileMap, const FMazeTileGeneratorInput& input)
     tileMap->SetTileTag(gates.gate2.location, static_cast<int32>(MazeTileType::PATH));
   }
 
-	auto filteredGates = FilterByDistance(siblingGates, input.minSiblingGateDistance);
+  //Filter gates near to start
+	auto filteredGates = FilterByDistance(siblingGates, input.minSiblingGateDistance, startSpace);
   Shuffle(filteredGates);
 
   for (int32 i = 0; i < input.gateLayerCount; i++) {

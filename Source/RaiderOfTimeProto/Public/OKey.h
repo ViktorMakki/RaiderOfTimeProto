@@ -17,6 +17,10 @@ class RAIDEROFTIMEPROTO_API AOKey : public AObstilce
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetSymbolToActivate(const FSymbol& activableSymbol);
+
+	UFUNCTION(BlueprintCallable)
+	ASymbolRule* GetSymbolToActivate() const;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	ASymbolRule* symbolToActivate;

@@ -125,7 +125,11 @@ TSharedPtr<Tree<PathPoint<DataType>, EdgeType>> PathSearcher::DFS(
     newPoint->parent = root;
     newPoint->data.data = {inputData.GetNextPointCallback(root->data.data, edge)};
     root->children[edge] = newPoint;
-    if (DFSStep(*result, newPoint, inputData, 1)) break;
+    if (DFSStep(*result, newPoint, inputData, 1)) {
+      newPoint->data.isToGoal = true;
+      root->data.isToGoal = true;
+    	break;
+    }
   }
 	return result;
 }

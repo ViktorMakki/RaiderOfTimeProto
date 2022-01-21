@@ -8,7 +8,7 @@ void AActivable::Activate()
 	if (isEnable && !isActive) {
 	  isActive = true;
       if(onActivate.IsBound()) {
-		  onActivate.Broadcast(); 
+		    onActivate.Broadcast(); 
       }  
 	}
 }
@@ -38,7 +38,6 @@ void AActivable::Enable()
 void AActivable::Disable()
 {
   if (isEnable) {
-    Deactivate();
     isEnable = false;
     if (onDisable.IsBound()) {
       onDisable.Broadcast();

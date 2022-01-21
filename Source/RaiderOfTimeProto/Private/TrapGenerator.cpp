@@ -15,9 +15,9 @@ using TrapSpaceTiles = std::vector<std::vector<MazeTileType>>;
 static std::unordered_map<TrapSpase, TrapSpaceTiles> GetTrapSpaceMap() {
   std::unordered_map<TrapSpase, std::vector<std::vector<MazeTileType>>> result;
   result[TrapSpase::WAY1] = {
-      {MazeTileType::WALL, MazeTileType::WALL, MazeTileType::WALL},
       {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
-      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL}};
+      {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
+      {MazeTileType::WALL, MazeTileType::WALL, MazeTileType::WALL}};
 
   result[TrapSpase::WAY2] = {
       {MazeTileType::WALL, MazeTileType::PATH, MazeTileType::WALL},
@@ -122,6 +122,7 @@ void FillMaze(ATileMap* tileMap, const FIntPoint& start,const TrapSpaceTiles& ti
       if (currentLocation.X >= size.X || currentLocation.Y >= size.Y)
         return;
       if (IsTypeOf(tiles[x][y], MazeTileType::PATH)) {
+        tileMap->DestroyActorsAt(currentLocation);
         tileMap->SetTileTag(currentLocation, static_cast<int32>(MazeTileType::OBSTICLE));
       }
 		}

@@ -44,20 +44,22 @@ TArray<FSymbol> ConstructRequiredKeys(ATileMap* tileMap, const FKeyGeneratorInpu
   const auto goal =
       tileMap->GetFirstTileByTag(static_cast<int32>(MazeTileType::GOALGATE));
   const auto path = UMazePath::Create(tileMap, start.location, goal.location,
-                                      SearchAlgorithm::DFS)
-                        ->GetPathToGoal();
+                                      SearchAlgorithm::DFS)->GetPathToGoal();
   if (path.Num() < 3) return {};
-
-  int32 lastGateIndex = 0;
-  int32 gateIndex = FindNextGateIndex(tileMap, path, 0);
+  
+  int32 gateIndex = 0;
   TArray<FSymbol> foundSymbols;
 
-  while (gateIndex > 0 && gateIndex < path.Num()) {
+  while (gateIndex >= 0 && gateIndex < path.Num()) {
+    const int32 lastGateIndex = gateIndex;
+    gateIndex = FindNextGateIndex(tileMap, path, gateIndex);
+    if (gateIndex < 0) return foundSymbols;
     const FSymbol activableGateSymbol =
         GetGateSymbol(tileMap, path[gateIndex].location);
     if (!foundSymbols.Contains(activableGateSymbol)) {
-      if (gateIndex - lastGateIndex < 2) continue;
-      const auto keyLocation = path[FMath::RandRange(lastGateIndex, gateIndex)];
+      if (gateIndex - lastGateIndex < 1) continue;
+      const auto keyLocation = path[FMath::RandRange(lastGateIndex + 1, gateIndex - 1)];
+      tileMap->DestroyActorsAt(keyLocation.location);
       AOKey* key = Cast<AOKey>(tileMap->SpawnActorAt(
           input.keyTypes[FMath::RandRange(0, input.keyTypes.Num() - 1)],
           keyLocation.location, keyLocation.directionToGoal));
@@ -74,8 +76,6 @@ TArray<FSymbol> ConstructRequiredKeys(ATileMap* tileMap, const FKeyGeneratorInpu
       }
       foundSymbols.Add(activableGateSymbol);
     }
-    lastGateIndex = gateIndex;
-    gateIndex = FindNextGateIndex(tileMap, path, gateIndex);
   }
 
   return foundSymbols;
@@ -115,6 +115,7 @@ void SpawnRandomKey(ATileMap* tileMap, const TArray<UClass*>& keyTypes,
     location = FIntPoint{FMath::RandRange(0, size.X - 1),
                          FMath::RandRange(0, size.Y - 1)};
   }
+  tileMap->DestroyActorsAt(location);
   AOKey* key = Cast<AOKey>(tileMap->SpawnActorAt(
       keyTypes[FMath::RandRange(0, keyTypes.Num() - 1)], location,
       UUtilsLibrary::GetRandomPathDirection(tileMap, location)));
@@ -136,7 +137,7 @@ void SpawnRandomKeys(ATileMap* tileMap, const TArray<UClass*>& keyTypes,
   for (const FSymbol& toActivateSymbol : toActivate) {
     FSymbol enableSymbol;
     const int32 enableIndex = FMath::RandRange(0, enables.Num() - 1);
-    for (int32 i = 0; i < enables.Num() || toActivateSymbol == enableSymbol; i++) {
+    for (int32 i = 0; i < enables.Num() && toActivateSymbol == enableSymbol; i++) {
       enableSymbol = enables[(enableIndex + i) % enables.Num()];
     }
     if (toActivateSymbol == enableSymbol) continue;
@@ -149,7 +150,7 @@ void AKeyGenerator::Construct()
   if (!tileMap) return;
 	if (input.keyTypes.IsEmpty()) return;
 
-  const auto foundSymbols = ConstructRequiredKeys(tileMap, input);
+  auto foundSymbols = ConstructRequiredKeys(tileMap, input);
   const auto notFoundSymbols = GetNotFoundSymbols(GetWorld(), foundSymbols);
   auto allSymbols = GetAllSymbols(GetWorld());
   if (!notFoundSymbols.IsEmpty()) {

@@ -12,3 +12,6 @@ void AOKey::SetSymbolToActivate(const FSymbol& activableSymbol) {
   symbolToActivate = symbolActor;
   if (SymbolChanged.IsBound()) SymbolChanged.Broadcast();
 }
+
+ASymbolRule* AOKey::GetSymbolToActivate() const
+{ return symbolToActivate; }

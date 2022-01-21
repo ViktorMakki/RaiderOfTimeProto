@@ -14,6 +14,7 @@ void ASymbolRule::AddObsticle(AObstilce* obsticle) {
   obsticle->SetSymbol(symbol);
   onActivate.AddDynamic(obsticle, &AActivable::Enable);
   onDeactivate.AddDynamic(obsticle, &AActivable::Disable);
+  if (!IsActive()) obsticle->Disable();
 }
 
 void ASymbolRule::Clear()
