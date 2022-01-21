@@ -12,17 +12,28 @@ void AMazeGenerator::Destruct()
 	tileMap->ClearActors();
 }
 
-void SpawnWithRandomDirection(ATileMap* TileMap, const FIntPoint& location, const TArray<UClass*>& types)
+void SpawnWithRandomDirection(ATileMap* tileMap, const FIntPoint& location, const TArray<UClass*>& types)
 {
   const auto type = UUtilsLibrary::GetRandomType(types);
   if (!type) return;
-  TileMap->SpawnActorAt(type, location,  UUtilsLibrary::GetRandomDirection());
+  tileMap->SpawnActorAt(type, location, UUtilsLibrary::GetRandomDirection());
 }
 
-void SpawnSingleWithRandomPathDirection(ATileMap* tileMap, const FIntPoint& location, UClass* type) {
+void SpawnSingleWithRandomPathDirection(ATileMap* tileMap, const FIntPoint& location, UClass* type)
+{
   if (!type) return;
   tileMap->SpawnActorAt(type, location, UUtilsLibrary::GetRandomPathDirection(tileMap, location));
 }
+
+void SpawnWithRandomPathDirection(ATileMap* tileMap,
+                                        const FIntPoint& location,
+                                        const TArray<UClass*>& types)
+{
+  const auto type = UUtilsLibrary::GetRandomType(types);
+  if (!type) return;
+  tileMap->SpawnActorAt(type, location, UUtilsLibrary::GetRandomPathDirection(tileMap, location));
+}
+
 
 
 void AMazeGenerator::Construct()
@@ -51,7 +62,7 @@ void AMazeGenerator::Construct()
           }
           break;
         case MazeTileType::GATE:
-          SpawnWithRandomDirection(tileMap, {x, y}, input.gateTypes);
+          SpawnWithRandomPathDirection(tileMap, {x, y}, input.gateTypes);
           break;
         case MazeTileType::GOALGATE:
           SpawnSingleWithRandomPathDirection(tileMap, {x, y}, input.goalGateType);
